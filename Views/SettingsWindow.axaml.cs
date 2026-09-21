@@ -1,0 +1,291 @@
+using System;
+using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Claudel.Data;
+using Claudel.Models;
+using Claudel.Services;
+
+namespace Claudel;
+
+public partial class SettingsWindow : Window
+{
+    private readonly SettingsService _settingsService;
+
+    public AppSettings Settings { get; private set; }
+
+    public SettingsWindow(
+        SettingsService settingsService,
+        AppSettings settings)
+    {
+        InitializeComponent();
+
+        _settingsService = settingsService;
+        Settings = settings;
+
+        LoadSettings();
+    }
+
+    private void LoadSettings()
+    {
+        MySqlHostTextBox.Text =
+            Settings.MySql.Host;
+
+        MySqlPortTextBox.Text =
+            Settings.MySql.Port.ToString();
+
+        MySqlDatabaseTextBox.Text =
+            Settings.MySql.Database;
+
+        MySqlUserTextBox.Text =
+            Settings.MySql.User;
+
+        MySqlPasswordTextBox.Text =
+            Settings.MySql.Password;
+
+        S3AccessKeyIdTextBox.Text =
+            Settings.S3.AccessKeyId;
+
+        S3SecretAccessKeyTextBox.Text =
+            Settings.S3.SecretAccessKey;
+
+        S3RegionTextBox.Text =
+            Settings.S3.Region;
+
+        S3BucketTextBox.Text =
+            Settings.S3.Bucket;
+    }
+
+    private AppSettings ReadSettings()
+    {
+        var port = 3306;
+
+        if (int.TryParse(
+                MySqlPortTextBox.Text,
+                out var parsedPort))
+        {
+            port = parsedPort;
+        }
+
+        return new AppSettings
+        {
+            MySql = new MySqlSettings
+            {
+                Host =
+                    MySqlHostTextBox.Text?.Trim() ?? "",
+
+                Port =
+                    port,
+
+                Database =
+                    MySqlDatabaseTextBox.Text?.Trim() ?? "",
+
+                User =
+                    MySqlUserTextBox.Text?.Trim() ?? "",
+
+                Password =
+                    MySqlPasswordTextBox.Text ?? ""
+            },
+
+            S3 = new S3Settings
+            {
+                AccessKeyId =
+                    S3AccessKeyIdTextBox.Text?.Trim() ?? "",
+
+                SecretAccessKey =
+                    S3SecretAccessKeyTextBox.Text ?? "",
+
+                Region =
+                    S3RegionTextBox.Text?.Trim() ?? "",
+
+                Bucket =
+                    S3BucketTextBox.Text?.Trim() ?? ""
+            }
+        };
+    }
+
+    private async void TestMySql_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        try
+        {
+            var settings = ReadSettings();
+
+            if (string.IsNullOrWhiteSpace(settings.MySql.Host))
+            {
+                await ShowMessageAsync(
+                    "MySQL Host is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(settings.MySql.Database))
+            {
+                await ShowMessageAsync(
+                    "MySQL Database is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(settings.MySql.User))
+            {
+                await ShowMessageAsync(
+                    "MySQL User is required.");
+
+                return;
+            }
+
+            var connectionString =
+                BuildConnectionString(settings);
+
+            var database =
+                new Database(connectionString);
+
+            await using var connection =
+                await database.OpenConnectionAsync();
+
+            await ShowMessageAsync(
+                "MySQL connection succeeded.");
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageAsync(
+                $"MySQL connection failed.\n\n{ex.Message}");
+        }
+    }
+
+    private async void Save_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        try
+        {
+            var settings = ReadSettings();
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.MySql.Host))
+            {
+                await ShowMessageAsync(
+                    "MySQL Host is required.");
+
+                return;
+            }
+
+            if (settings.MySql.Port <= 0 ||
+                settings.MySql.Port > 65535)
+            {
+                await ShowMessageAsync(
+                    "MySQL Port is invalid.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.MySql.Database))
+            {
+                await ShowMessageAsync(
+                    "MySQL Database is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.MySql.User))
+            {
+                await ShowMessageAsync(
+                    "MySQL User is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.S3.AccessKeyId))
+            {
+                await ShowMessageAsync(
+                    "S3 Access Key ID is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.S3.SecretAccessKey))
+            {
+                await ShowMessageAsync(
+                    "S3 Secret Access Key is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.S3.Region))
+            {
+                await ShowMessageAsync(
+                    "S3 Region is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.S3.Bucket))
+            {
+                await ShowMessageAsync(
+                    "S3 Bucket is required.");
+
+                return;
+            }
+
+            await _settingsService.SaveAsync(
+                settings);
+
+            Settings = settings;
+
+            Close(true);
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageAsync(
+                $"Failed to save settings.\n\n{ex.Message}");
+        }
+    }
+
+    private void Cancel_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        Close(false);
+    }
+
+    private static string BuildConnectionString(
+        AppSettings settings)
+    {
+        return
+            $"Server={settings.MySql.Host};" +
+            $"Port={settings.MySql.Port};" +
+            $"Database={settings.MySql.Database};" +
+            $"User ID={settings.MySql.User};" +
+            $"Password={settings.MySql.Password};";
+    }
+
+    private async Task ShowMessageAsync(
+        string message)
+    {
+        var dialog = new Window
+        {
+            Title = "Settings",
+            Width = 500,
+            Height = 220,
+
+            Content = new TextBlock
+            {
+                Text = message,
+                TextWrapping =
+                    Avalonia.Media.TextWrapping.Wrap,
+                Margin =
+                    new Avalonia.Thickness(20)
+            }
+        };
+
+        await dialog.ShowDialog(this);
+    }
+}

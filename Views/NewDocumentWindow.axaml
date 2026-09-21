@@ -1,0 +1,186 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Claudel.NewDocumentWindow"
+        Title="New Document"
+        FontFamily="Segoe UI"
+        Width="520"
+        Height="570"
+        MinWidth="460"
+        MinHeight="500"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Opacity" Value="0.65"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="MinHeight" Value="28"/>
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="9,4"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="MinHeight" Value="28"/>
+        </Style>
+
+        <Style Selector="ProgressBar">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+
+    </Window.Styles>
+
+    <ScrollViewer>
+
+        <StackPanel
+            Margin="24"
+            Spacing="6">
+
+            <TextBlock
+                Text="New Document"
+                FontSize="17"
+                FontWeight="SemiBold"
+                Margin="0,0,0,12"/>
+
+            <!-- Title -->
+
+            <TextBlock
+                Classes="label"
+                Text="Title"/>
+
+            <TextBox
+                x:Name="TitleTextBox"/>
+
+            <!-- Author -->
+
+            <TextBlock
+                Classes="label"
+                Text="Author"
+                Margin="0,7,0,0"/>
+
+            <TextBox
+                x:Name="AuthorTextBox"/>
+
+            <!-- Category -->
+
+            <TextBlock
+                Classes="label"
+                Text="Category"
+                Margin="0,7,0,0"/>
+
+            <TextBox
+                x:Name="CategoryTextBox"/>
+
+            <!-- Tags -->
+
+            <TextBlock
+                Classes="label"
+                Text="Tags"
+                Margin="0,7,0,0"/>
+
+            <TextBox
+                x:Name="TagsTextBox"/>
+
+            <!-- Year -->
+
+            <TextBlock
+                Classes="label"
+                Text="Year"
+                Margin="0,7,0,0"/>
+
+            <TextBox
+                x:Name="YearTextBox"/>
+
+            <!-- PDF -->
+
+            <TextBlock
+                Classes="label"
+                Text="PDF"
+                Margin="0,7,0,0"/>
+
+            <Grid
+                ColumnDefinitions="*,Auto"
+                ColumnSpacing="6">
+
+                <TextBox
+                    x:Name="PdfPathTextBox"
+                    Watermark="No PDF selected"
+                    IsReadOnly="True"/>
+
+                <Button
+                    x:Name="BrowsePdfButton"
+                    Grid.Column="1"
+                    Content="Browse..."
+                    Click="BrowsePdf_Click"/>
+
+            </Grid>
+
+            <!-- Progress -->
+
+            <StackPanel
+                x:Name="UploadProgressPanel"
+                Spacing="4"
+                Margin="0,14,0,0"
+                IsVisible="False">
+
+                <Grid
+                    ColumnDefinitions="*,Auto">
+
+                    <TextBlock
+                        x:Name="UploadStatusText"
+                        Text="Uploading PDF..."
+                        FontSize="11"/>
+
+                    <TextBlock
+                        x:Name="UploadProgressText"
+                        Grid.Column="1"
+                        Text="0%"
+                        FontSize="11"/>
+
+                </Grid>
+
+                <ProgressBar
+                    x:Name="UploadProgressBar"
+                    Minimum="0"
+                    Maximum="100"
+                    Value="0"/>
+
+            </StackPanel>
+
+            <!-- Buttons -->
+
+            <StackPanel
+                Orientation="Horizontal"
+                HorizontalAlignment="Right"
+                Spacing="6"
+                Margin="0,18,0,0">
+
+                <Button
+                    x:Name="CancelButton"
+                    Content="Cancel"
+                    Click="Cancel_Click"/>
+
+                <Button
+                    x:Name="SaveButton"
+                    Content="Save"
+                    Click="Save_Click"/>
+
+            </StackPanel>
+
+        </StackPanel>
+
+    </ScrollViewer>
+
+</Window>
+

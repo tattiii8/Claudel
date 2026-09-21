@@ -1,0 +1,44 @@
+# Build
+bin/
+obj/
+
+# Visual Studio
+.vs/
+.vscode/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+packages/
+
+# Application settings / secrets
+appsettings.json
+appsettings.*.json
+
+# Claudel local settings
+settings.json
+config.json
+
+# AWS / credentials
+.aws/
+credentials
+credentials.json
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Publish output
+publish/

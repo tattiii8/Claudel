@@ -1,0 +1,132 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Claudel.DocumentWindow"
+        Title="Document"
+        FontFamily="Segoe UI"
+        Width="560"
+        Height="390"
+        MinWidth="480"
+        MinHeight="340"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Opacity" Value="0.6"/>
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="9,4"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="MinHeight" Value="28"/>
+        </Style>
+
+        <Style Selector="Button.delete">
+            <Setter Property="Foreground" Value="#C62828"/>
+        </Style>
+
+    </Window.Styles>
+
+    <Grid
+        Margin="24"
+        RowDefinitions="Auto,1,Auto,Auto"
+        RowSpacing="14">
+
+        <!-- Header -->
+
+        <StackPanel
+            Grid.Row="0"
+            Spacing="3">
+
+            <TextBlock
+                x:Name="TitleTextBlock"
+                FontSize="17"
+                FontWeight="SemiBold"
+                TextWrapping="Wrap"/>
+
+            <TextBlock
+                x:Name="AuthorTextBlock"
+                FontSize="11"
+                Opacity="0.6"/>
+
+        </StackPanel>
+
+        <Separator
+            Grid.Row="1"/>
+
+        <!-- Metadata -->
+
+        <Grid
+            Grid.Row="2"
+            ColumnDefinitions="100,*"
+            RowDefinitions="Auto,Auto,Auto"
+            RowSpacing="10">
+
+            <TextBlock
+                Classes="label"
+                Text="Category"/>
+
+            <TextBlock
+                Grid.Column="1"
+                x:Name="CategoryTextBlock"/>
+
+            <TextBlock
+                Grid.Row="1"
+                Classes="label"
+                Text="Tags"/>
+
+            <TextBlock
+                Grid.Row="1"
+                Grid.Column="1"
+                x:Name="TagsTextBlock"
+                TextWrapping="Wrap"/>
+
+            <TextBlock
+                Grid.Row="2"
+                Classes="label"
+                Text="Year"/>
+
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="1"
+                x:Name="YearTextBlock"/>
+
+        </Grid>
+
+        <!-- Buttons -->
+
+        <StackPanel
+            Grid.Row="3"
+            Orientation="Horizontal"
+            HorizontalAlignment="Right"
+            Spacing="6">
+
+            <Button
+                Content="Open PDF"
+                Click="OpenPdf_Click"/>
+
+            <Button
+                Content="Edit"
+                Click="Edit_Click"/>
+
+            <Button
+                Classes="delete"
+                Content="Delete"
+                Click="Delete_Click"/>
+
+            <Button
+                Content="Close"
+                Click="Close_Click"/>
+
+        </StackPanel>
+
+    </Grid>
+
+</Window>
+

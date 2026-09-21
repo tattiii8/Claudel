@@ -1,0 +1,156 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Claudel"
+        xmlns:models="using:Claudel.Models"
+        x:Class="Claudel.MainWindow"
+        x:DataType="local:MainWindow"
+        FontFamily="Segoe UI"
+        Title="Claudel"
+        Width="1100"
+        Height="700"
+        MinWidth="800"
+        MinHeight="500">
+
+    <Window.Styles>
+
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="9,4"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="MinHeight" Value="28"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="MinHeight" Value="28"/>
+        </Style>
+
+        <Style Selector="ListBox">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+
+    </Window.Styles>
+
+    <Grid
+        RowDefinitions="Auto,*"
+        Margin="12">
+
+        <!-- Header -->
+
+        <Grid
+            Grid.Row="0"
+            ColumnDefinitions="*,Auto"
+            Margin="0,0,0,10">
+
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="10"
+                VerticalAlignment="Center">
+
+                <TextBlock
+                    Text="Claudel"
+                    FontSize="17"
+                    FontWeight="SemiBold"/>
+
+                <TextBlock
+                    Text="Documents"
+                    FontSize="12"
+                    Opacity="0.55"
+                    VerticalAlignment="Center"/>
+
+            </StackPanel>
+
+            <StackPanel
+                Grid.Column="1"
+                Orientation="Horizontal"
+                Spacing="6">
+
+                <Button
+                    Content="New Document"
+                    Click="NewDocument_Click"/>
+
+                <Button
+                    Content="Settings"
+                    Click="Settings_Click"/>
+
+            </StackPanel>
+
+        </Grid>
+
+        <!-- Main -->
+
+        <Grid
+            Grid.Row="1"
+            RowDefinitions="Auto,*"
+            RowSpacing="8">
+
+            <!-- Search -->
+
+            <TextBox
+                x:Name="SearchTextBox"
+                PlaceholderText="Search..."
+                TextChanged="SearchTextBox_TextChanged"/>
+
+            <!-- Document list -->
+
+            <ListBox
+                Grid.Row="1"
+                x:Name="DocumentListBox"
+                ItemsSource="{Binding Documents}"
+                DoubleTapped="DocumentListBox_DoubleTapped">
+
+                <ListBox.ItemTemplate>
+
+                    <DataTemplate
+                        x:DataType="models:Document">
+
+                        <Grid
+                            ColumnDefinitions="*,180,120,80">
+
+                            <TextBlock
+                                Grid.Column="0"
+                                Text="{Binding Title}"
+                                TextTrimming="CharacterEllipsis"/>
+
+                            <TextBlock
+                                Grid.Column="1"
+                                Text="{Binding Author}"
+                                Opacity="0.65"
+                                TextTrimming="CharacterEllipsis"/>
+
+                            <TextBlock
+                                Grid.Column="2"
+                                Text="{Binding Category}"
+                                Opacity="0.65"
+                                TextTrimming="CharacterEllipsis"/>
+
+                            <TextBlock
+                                Grid.Column="3"
+                                Text="{Binding Year}"
+                                Opacity="0.65"
+                                HorizontalAlignment="Right"/>
+
+                        </Grid>
+
+                    </DataTemplate>
+
+                </ListBox.ItemTemplate>
+
+            </ListBox>
+
+        </Grid>
+
+    </Grid>
+
+</Window>

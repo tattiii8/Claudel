@@ -1,0 +1,209 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Claudel.SettingsWindow"
+        FontFamily="Segoe UI"
+        Title="Settings"
+        Width="560"
+        Height="600"
+        MinWidth="500"
+        MinHeight="550"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,4,0,8"/>
+        </Style>
+
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Opacity" Value="0.65"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Header -->
+
+        <TextBlock
+            Grid.Row="0"
+            Text="Settings"
+            FontSize="21"
+            FontWeight="SemiBold"
+            Margin="24,20,24,16"/>
+
+        <!-- Tabs -->
+
+        <TabControl
+            Grid.Row="1"
+            Margin="24,0,24,0">
+
+            <!-- MySQL -->
+
+            <TabItem Header="MySQL">
+
+                <ScrollViewer>
+
+                    <StackPanel
+                        Margin="16,20,16,20"
+                        Spacing="8">
+
+                        <TextBlock
+                            Classes="section"
+                            Text="MySQL Database"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Host"/>
+
+                        <TextBox
+                            x:Name="MySqlHostTextBox"
+                            PlaceholderText="10.0.9.123"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Port"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="MySqlPortTextBox"
+                            PlaceholderText="3306"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Database"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="MySqlDatabaseTextBox"
+                            PlaceholderText="claudel"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="User"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="MySqlUserTextBox"
+                            PlaceholderText="claudel"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Password"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="MySqlPasswordTextBox"/>
+
+                    </StackPanel>
+
+                </ScrollViewer>
+
+            </TabItem>
+
+            <!-- S3 -->
+
+            <TabItem Header="AWS S3">
+
+                <ScrollViewer>
+
+                    <StackPanel
+                        Margin="16,20,16,20"
+                        Spacing="8">
+
+                        <TextBlock
+                            Classes="section"
+                            Text="AWS S3"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Access Key ID"/>
+
+                        <TextBox
+                            x:Name="S3AccessKeyIdTextBox"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Secret Access Key"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="S3SecretAccessKeyTextBox"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Region"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="S3RegionTextBox"
+                            PlaceholderText="ap-northeast-1"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Bucket"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="S3BucketTextBox"
+                            PlaceholderText="claudel-documents"/>
+
+                    </StackPanel>
+
+                </ScrollViewer>
+
+            </TabItem>
+
+        </TabControl>
+
+        <!-- Buttons -->
+
+        <StackPanel
+            Grid.Row="2"
+            Orientation="Horizontal"
+            HorizontalAlignment="Right"
+            Spacing="10"
+            Margin="24,12,24,20">
+
+            <Button
+                Content="Test MySQL"
+                Click="TestMySql_Click"/>
+
+            <Button
+                Content="Cancel"
+                Click="Cancel_Click"/>
+
+            <Button
+                Content="Save"
+                Click="Save_Click"/>
+
+        </StackPanel>
+
+    </Grid>
+
+</Window>
