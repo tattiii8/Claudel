@@ -1,3 +1,5 @@
+using System;
+
 namespace Claudel.Models;
 
 public class AppSettings
@@ -5,6 +7,8 @@ public class AppSettings
     public MySqlSettings MySql { get; set; } = new();
 
     public S3Settings S3 { get; set; } = new();
+
+    public RedmineSettings Redmine { get; set; } = new();
 }
 
 public class MySqlSettings
@@ -29,4 +33,15 @@ public class S3Settings
     public string Region { get; set; } = "ap-northeast-1";
 
     public string Bucket { get; set; } = "";
+}
+
+public class RedmineSettings
+{
+    public string Url { get; set; } = "";
+
+    public string ApiKey { get; set; } = "";
+
+    public string ProjectId { get; set; } = "";
+
+    public int TrackerId { get; set; } = 5;
 }

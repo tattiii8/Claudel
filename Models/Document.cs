@@ -23,6 +23,10 @@ public class Document
 
     public Bitmap? CoverImage { get; set; }
 
+    public int? RedmineIssueId { get; set; }
+
+    public string RedmineIssueUrl { get; set; } = "";
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }

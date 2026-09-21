@@ -126,7 +126,7 @@
 
             </TabItem>
 
-            <!-- S3 -->
+            <!-- AWS S3 -->
 
             <TabItem Header="AWS S3">
 
@@ -172,6 +172,67 @@
                         <TextBox
                             x:Name="S3BucketTextBox"
                             PlaceholderText="claudel-documents"/>
+
+                    </StackPanel>
+
+                </ScrollViewer>
+
+            </TabItem>
+
+            <!-- Redmine -->
+
+            <TabItem Header="Redmine">
+
+                <ScrollViewer>
+
+                    <StackPanel
+                        Margin="16,20,16,20"
+                        Spacing="8">
+
+                        <TextBlock
+                            Classes="section"
+                            Text="Redmine"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="URL"/>
+
+                        <TextBox
+                            x:Name="RedmineUrlTextBox"
+                            PlaceholderText="https://levinas.lesure.net"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="API Access Key"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="RedmineApiKeyTextBox"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Project ID"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="RedmineProjectIdTextBox"
+                            PlaceholderText="recherche"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Tracker ID"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="RedmineTrackerIdTextBox"
+                            PlaceholderText="5"/>
+
+                        <Button
+                            x:Name="TestRedmineButton"
+                            Content="Test Redmine"
+                            HorizontalAlignment="Left"
+                            Margin="0,12,0,0"
+                            Click="TestRedmine_Click"/>
 
                     </StackPanel>
 

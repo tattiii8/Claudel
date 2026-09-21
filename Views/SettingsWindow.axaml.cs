@@ -54,6 +54,18 @@ public partial class SettingsWindow : Window
 
         S3BucketTextBox.Text =
             Settings.S3.Bucket;
+
+        RedmineUrlTextBox.Text =
+            Settings.Redmine.Url;
+
+        RedmineApiKeyTextBox.Text =
+            Settings.Redmine.ApiKey;
+
+        RedmineProjectIdTextBox.Text =
+            Settings.Redmine.ProjectId;
+
+        RedmineTrackerIdTextBox.Text =
+            Settings.Redmine.TrackerId.ToString();
     }
 
     private AppSettings ReadSettings()
@@ -100,6 +112,25 @@ public partial class SettingsWindow : Window
 
                 Bucket =
                     S3BucketTextBox.Text?.Trim() ?? ""
+            },
+
+            Redmine = new RedmineSettings
+            {
+                Url =
+                    RedmineUrlTextBox.Text?.Trim() ?? "",
+
+                ApiKey =
+                    RedmineApiKeyTextBox.Text ?? "",
+
+                ProjectId =
+                    RedmineProjectIdTextBox.Text?.Trim() ?? "",
+
+                TrackerId =
+                    int.TryParse(
+                        RedmineTrackerIdTextBox.Text,
+                        out var trackerId)
+                        ? trackerId
+                        : 5
             }
         };
     }
@@ -152,6 +183,71 @@ public partial class SettingsWindow : Window
         {
             await ShowMessageAsync(
                 $"MySQL connection failed.\n\n{ex.Message}");
+        }
+    }
+
+    private async void TestRedmine_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        try
+        {
+            var settings = ReadSettings();
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.Redmine.Url))
+            {
+                await ShowMessageAsync(
+                    "Redmine URL is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.Redmine.ApiKey))
+            {
+                await ShowMessageAsync(
+                    "Redmine API Access Key is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.Redmine.ProjectId))
+            {
+                await ShowMessageAsync(
+                    "Redmine Project ID is required.");
+
+                return;
+            }
+
+            if (settings.Redmine.TrackerId <= 0)
+            {
+                await ShowMessageAsync(
+                    "Redmine Tracker ID is invalid.");
+
+                return;
+            }
+
+            TestRedmineButton.IsEnabled = false;
+
+            var service =
+                new RedmineService(
+                    settings.Redmine);
+
+            await service.TestConnectionAsync();
+
+            await ShowMessageAsync(
+                "Redmine connection succeeded.");
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageAsync(
+                $"Redmine connection failed.\n\n{ex.Message}");
+        }
+        finally
+        {
+            TestRedmineButton.IsEnabled = true;
         }
     }
 

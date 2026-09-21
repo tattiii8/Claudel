@@ -104,6 +104,8 @@ public class DocumentRepository
                 year,
                 s3_key,
                 cover_s3_key,
+                redmine_issue_id,
+                redmine_issue_url,
                 created_at,
                 updated_at
             FROM documents
@@ -158,6 +160,8 @@ public class DocumentRepository
                 year,
                 s3_key,
                 cover_s3_key,
+                redmine_issue_id,
+                redmine_issue_url,
                 created_at,
                 updated_at
             FROM documents
@@ -204,7 +208,9 @@ public class DocumentRepository
                 tags = @tags,
                 year = @year,
                 s3_key = @s3_key,
-                cover_s3_key = @cover_s3_key
+                cover_s3_key = @cover_s3_key,
+                redmine_issue_id = @redmine_issue_id,
+                redmine_issue_url = @redmine_issue_url
             WHERE id = @id;
             """;
 
@@ -248,6 +254,18 @@ public class DocumentRepository
             string.IsNullOrWhiteSpace(document.CoverS3Key)
                 ? DBNull.Value
                 : document.CoverS3Key);
+
+        command.Parameters.AddWithValue(
+            "@redmine_issue_id",
+            document.RedmineIssueId.HasValue
+                ? document.RedmineIssueId.Value
+                : DBNull.Value);
+
+        command.Parameters.AddWithValue(
+            "@redmine_issue_url",
+            string.IsNullOrWhiteSpace(document.RedmineIssueUrl)
+                ? DBNull.Value
+                : document.RedmineIssueUrl);
 
         var affectedRows =
             await command.ExecuteNonQueryAsync();
@@ -332,6 +350,18 @@ public class DocumentRepository
                     reader.GetOrdinal("cover_s3_key"))
                     ? ""
                     : reader.GetString("cover_s3_key"),
+
+            RedmineIssueId =
+                reader.IsDBNull(
+                    reader.GetOrdinal("redmine_issue_id"))
+                    ? null
+                    : reader.GetInt32("redmine_issue_id"),
+
+            RedmineIssueUrl =
+                reader.IsDBNull(
+                    reader.GetOrdinal("redmine_issue_url"))
+                    ? ""
+                    : reader.GetString("redmine_issue_url"),
 
             CreatedAt =
                 reader.GetDateTime("created_at"),
