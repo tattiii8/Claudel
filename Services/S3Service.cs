@@ -14,8 +14,6 @@ public class S3Service
 {
     private readonly AppSettings _settings;
 
-    // S3 Multipart Upload の1パートサイズ
-    // 8MB単位でアップロードする
     private const long MultipartPartSize =
         8L * 1024 * 1024;
 
@@ -94,7 +92,6 @@ public class S3Service
         using var client =
             CreateClient();
 
-        // 小さいファイルは通常のPutObject
         if (fileInfo.Length < MultipartPartSize)
         {
             var request =
@@ -113,15 +110,13 @@ public class S3Service
                         "application/pdf"
                 };
 
-            await client.PutObjectAsync(
-                request);
+            await client.PutObjectAsync(request);
 
             progress?.Report(100);
 
             return;
         }
 
-        // 8MB以上はMultipart Upload
         await UploadMultipartAsync(
             client,
             filePath,
@@ -230,8 +225,7 @@ public class S3Service
                         partNumber,
                         uploadPartResponse.ETag));
 
-                uploadedBytes +=
-                    bytesRead;
+                uploadedBytes += bytesRead;
 
                 var percent =
                     totalBytes > 0
@@ -240,9 +234,7 @@ public class S3Service
                         : 100.0;
 
                 progress?.Report(
-                    Math.Min(
-                        percent,
-                        100.0));
+                    Math.Min(percent, 100.0));
 
                 partNumber++;
             }
@@ -262,8 +254,7 @@ public class S3Service
 
             foreach (var part in completedParts)
             {
-                completeRequest.AddPartETags(
-                    part);
+                completeRequest.AddPartETags(part);
             }
 
             await client.CompleteMultipartUploadAsync(
@@ -273,8 +264,6 @@ public class S3Service
         }
         catch
         {
-            // アップロード途中で失敗した場合、
-            // S3側に残っているMultipart Uploadを破棄する
             try
             {
                 await client.AbortMultipartUploadAsync(
@@ -292,46 +281,62 @@ public class S3Service
             }
             catch
             {
-                // Abort自体の失敗は元の例外を優先
             }
 
             throw;
         }
     }
 
-    private static async Task<int> ReadPartAsync(
-        FileStream stream,
-        byte[] buffer)
+    public async Task UploadCoverAsync(
+        string filePath,
+        string objectKey)
     {
-        var totalRead = 0;
-
-        while (
-            totalRead <
-            buffer.Length)
+        if (!File.Exists(filePath))
         {
-            var read =
-                await stream.ReadAsync(
-                    buffer.AsMemory(
-                        totalRead,
-                        buffer.Length -
-                        totalRead));
-
-            if (read == 0)
-            {
-                break;
-            }
-
-            totalRead += read;
+            throw new FileNotFoundException(
+                "Cover image was not found.",
+                filePath);
         }
 
-        return totalRead;
+        var extension =
+            Path.GetExtension(filePath);
+
+        var contentType =
+            extension.ToLowerInvariant() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => throw new InvalidOperationException(
+                    "Supported cover formats are JPG, PNG and WebP.")
+            };
+
+        using var client =
+            CreateClient();
+
+        var request =
+            new PutObjectRequest
+            {
+                BucketName =
+                    _settings.S3.Bucket,
+
+                Key =
+                    objectKey,
+
+                FilePath =
+                    filePath,
+
+                ContentType =
+                    contentType
+            };
+
+        await client.PutObjectAsync(request);
     }
 
     public async Task<string> DownloadPdfAsync(
         string objectKey)
     {
-        if (string.IsNullOrWhiteSpace(
-                objectKey))
+        if (string.IsNullOrWhiteSpace(objectKey))
         {
             throw new ArgumentException(
                 "S3 object key is empty.",
@@ -343,15 +348,12 @@ public class S3Service
                 Path.GetTempPath(),
                 "Claudel");
 
-        Directory.CreateDirectory(
-            tempDirectory);
+        Directory.CreateDirectory(tempDirectory);
 
         var fileName =
-            Path.GetFileName(
-                objectKey);
+            Path.GetFileName(objectKey);
 
-        if (string.IsNullOrWhiteSpace(
-                fileName))
+        if (string.IsNullOrWhiteSpace(fileName))
         {
             fileName =
                 $"{Guid.NewGuid():N}.pdf";
@@ -383,8 +385,7 @@ public class S3Service
             };
 
         using var response =
-            await client.GetObjectAsync(
-                request);
+            await client.GetObjectAsync(request);
 
         await response.WriteResponseStreamToFileAsync(
             localPath,
@@ -394,11 +395,84 @@ public class S3Service
         return localPath;
     }
 
+    public async Task DownloadCoverAsync(
+        string objectKey,
+        string localPath)
+    {
+        if (string.IsNullOrWhiteSpace(objectKey))
+        {
+            throw new ArgumentException(
+                "S3 object key is empty.",
+                nameof(objectKey));
+        }
+
+        if (string.IsNullOrWhiteSpace(localPath))
+        {
+            throw new ArgumentException(
+                "Local path is empty.",
+                nameof(localPath));
+        }
+
+        var directory =
+            Path.GetDirectoryName(localPath);
+
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        var temporaryPath =
+            localPath + ".tmp";
+
+        try
+        {
+            using var client =
+                CreateClient();
+
+            var request =
+                new GetObjectRequest
+                {
+                    BucketName =
+                        _settings.S3.Bucket,
+
+                    Key =
+                        objectKey
+                };
+
+            using var response =
+                await client.GetObjectAsync(request);
+
+            await response.WriteResponseStreamToFileAsync(
+                temporaryPath,
+                false,
+                default);
+
+            File.Move(
+                temporaryPath,
+                localPath,
+                true);
+        }
+        catch
+        {
+            if (File.Exists(temporaryPath))
+            {
+                try
+                {
+                    File.Delete(temporaryPath);
+                }
+                catch
+                {
+                }
+            }
+
+            throw;
+        }
+    }
+
     public async Task DeleteAsync(
         string objectKey)
     {
-        if (string.IsNullOrWhiteSpace(
-                objectKey))
+        if (string.IsNullOrWhiteSpace(objectKey))
         {
             return;
         }
@@ -416,7 +490,31 @@ public class S3Service
                     objectKey
             };
 
-        await client.DeleteObjectAsync(
-            request);
+        await client.DeleteObjectAsync(request);
+    }
+
+    private static async Task<int> ReadPartAsync(
+        FileStream stream,
+        byte[] buffer)
+    {
+        var totalRead = 0;
+
+        while (totalRead < buffer.Length)
+        {
+            var read =
+                await stream.ReadAsync(
+                    buffer.AsMemory(
+                        totalRead,
+                        buffer.Length - totalRead));
+
+            if (read == 0)
+            {
+                break;
+            }
+
+            totalRead += read;
+        }
+
+        return totalRead;
     }
 }

@@ -32,18 +32,18 @@
         </Style>
 
         <Style Selector="ListBox">
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Background" Value="Transparent"/>
         </Style>
 
         <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Padding" Value="4"/>
             <Setter Property="Margin" Value="0"/>
         </Style>
 
     </Window.Styles>
 
     <Grid
-        RowDefinitions="Auto,*"
+        RowDefinitions="Auto,Auto,*"
         Margin="12">
 
         <!-- Header -->
@@ -64,7 +64,7 @@
                     FontWeight="SemiBold"/>
 
                 <TextBlock
-                    Text="Documents"
+                    Text="Library"
                     FontSize="12"
                     Opacity="0.55"
                     VerticalAlignment="Center"/>
@@ -88,68 +88,76 @@
 
         </Grid>
 
-        <!-- Main -->
+        <!-- Search -->
 
-        <Grid
+        <TextBox
             Grid.Row="1"
-            RowDefinitions="Auto,*"
-            RowSpacing="8">
+            x:Name="SearchTextBox"
+            PlaceholderText="Search..."
+            TextChanged="SearchTextBox_TextChanged"
+            Margin="0,0,0,10"/>
 
-            <!-- Search -->
+        <!-- Documents -->
 
-            <TextBox
-                x:Name="SearchTextBox"
-                PlaceholderText="Search..."
-                TextChanged="SearchTextBox_TextChanged"/>
+        <ListBox
+            Grid.Row="2"
+            x:Name="DocumentListBox"
+            ItemsSource="{Binding Documents}"
+            DoubleTapped="DocumentListBox_DoubleTapped">
 
-            <!-- Document list -->
+            <ListBox.ItemsPanel>
 
-            <ListBox
-                Grid.Row="1"
-                x:Name="DocumentListBox"
-                ItemsSource="{Binding Documents}"
-                DoubleTapped="DocumentListBox_DoubleTapped">
+                <ItemsPanelTemplate>
 
-                <ListBox.ItemTemplate>
+                    <WrapPanel
+                        Orientation="Horizontal"/>
 
-                    <DataTemplate
-                        x:DataType="models:Document">
+                </ItemsPanelTemplate>
 
-                        <Grid
-                            ColumnDefinitions="*,180,120,80">
+            </ListBox.ItemsPanel>
+
+            <ListBox.ItemTemplate>
+
+                <DataTemplate
+                    x:DataType="models:Document">
+
+                    <Border
+                        Width="150"
+                        Margin="4"
+                        Padding="6"
+                        BorderBrush="#33000000"
+                        BorderThickness="1">
+
+                        <StackPanel
+                            Spacing="6">
+
+                            <Border
+                                Width="138"
+                                Height="190"
+                                Background="#10000000">
+
+                                <Image
+                                    Source="{Binding CoverImage}"
+                                    Stretch="Uniform"/>
+                            </Border>
 
                             <TextBlock
-                                Grid.Column="0"
                                 Text="{Binding Title}"
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                TextWrapping="Wrap"
+                                MaxHeight="36"
                                 TextTrimming="CharacterEllipsis"/>
 
-                            <TextBlock
-                                Grid.Column="1"
-                                Text="{Binding Author}"
-                                Opacity="0.65"
-                                TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
 
-                            <TextBlock
-                                Grid.Column="2"
-                                Text="{Binding Category}"
-                                Opacity="0.65"
-                                TextTrimming="CharacterEllipsis"/>
+                    </Border>
 
-                            <TextBlock
-                                Grid.Column="3"
-                                Text="{Binding Year}"
-                                Opacity="0.65"
-                                HorizontalAlignment="Right"/>
+                </DataTemplate>
 
-                        </Grid>
+            </ListBox.ItemTemplate>
 
-                    </DataTemplate>
-
-                </ListBox.ItemTemplate>
-
-            </ListBox>
-
-        </Grid>
+        </ListBox>
 
     </Grid>
 

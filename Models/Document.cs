@@ -1,4 +1,5 @@
 using System;
+using Avalonia.Media.Imaging;
 
 namespace Claudel.Models;
 
@@ -17,6 +18,10 @@ public class Document
     public int? Year { get; set; }
 
     public string S3Key { get; set; } = "";
+
+    public string CoverS3Key { get; set; } = "";
+
+    public Bitmap? CoverImage { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

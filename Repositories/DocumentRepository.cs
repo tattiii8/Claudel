@@ -30,7 +30,8 @@ public class DocumentRepository
                 category,
                 tags,
                 year,
-                s3_key
+                s3_key,
+                cover_s3_key
             )
             VALUES
             (
@@ -39,7 +40,8 @@ public class DocumentRepository
                 @category,
                 @tags,
                 @year,
-                @s3_key
+                @s3_key,
+                @cover_s3_key
             );
             """;
 
@@ -70,10 +72,15 @@ public class DocumentRepository
 
         command.Parameters.AddWithValue(
             "@s3_key",
-            string.IsNullOrWhiteSpace(
-                document.S3Key)
+            string.IsNullOrWhiteSpace(document.S3Key)
                 ? DBNull.Value
                 : document.S3Key);
+
+        command.Parameters.AddWithValue(
+            "@cover_s3_key",
+            string.IsNullOrWhiteSpace(document.CoverS3Key)
+                ? DBNull.Value
+                : document.CoverS3Key);
 
         await command.ExecuteNonQueryAsync();
 
@@ -96,6 +103,7 @@ public class DocumentRepository
                 tags,
                 year,
                 s3_key,
+                cover_s3_key,
                 created_at,
                 updated_at
             FROM documents
@@ -149,6 +157,7 @@ public class DocumentRepository
                 tags,
                 year,
                 s3_key,
+                cover_s3_key,
                 created_at,
                 updated_at
             FROM documents
@@ -194,7 +203,8 @@ public class DocumentRepository
                 category = @category,
                 tags = @tags,
                 year = @year,
-                s3_key = @s3_key
+                s3_key = @s3_key,
+                cover_s3_key = @cover_s3_key
             WHERE id = @id;
             """;
 
@@ -229,10 +239,15 @@ public class DocumentRepository
 
         command.Parameters.AddWithValue(
             "@s3_key",
-            string.IsNullOrWhiteSpace(
-                document.S3Key)
+            string.IsNullOrWhiteSpace(document.S3Key)
                 ? DBNull.Value
                 : document.S3Key);
+
+        command.Parameters.AddWithValue(
+            "@cover_s3_key",
+            string.IsNullOrWhiteSpace(document.CoverS3Key)
+                ? DBNull.Value
+                : document.CoverS3Key);
 
         var affectedRows =
             await command.ExecuteNonQueryAsync();
@@ -311,6 +326,12 @@ public class DocumentRepository
                     reader.GetOrdinal("s3_key"))
                     ? ""
                     : reader.GetString("s3_key"),
+
+            CoverS3Key =
+                reader.IsDBNull(
+                    reader.GetOrdinal("cover_s3_key"))
+                    ? ""
+                    : reader.GetString("cover_s3_key"),
 
             CreatedAt =
                 reader.GetDateTime("created_at"),

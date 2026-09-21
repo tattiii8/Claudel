@@ -1,9 +1,11 @@
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Platform.Storage;
+using Avalonia.Media.Imaging;
 using Claudel.Models;
 using Claudel.Repositories;
 using Claudel.Services;
@@ -13,9 +15,18 @@ namespace Claudel;
 public partial class NewDocumentWindow : Window
 {
     private readonly DocumentRepository _repository;
+
+    private readonly OpenLibraryService _openLibraryService;
     private readonly S3Service _s3Service;
 
-    private string? _pdfPath;
+    private readonly ObservableCollection<BookCoverCandidate>
+        _coverCandidates = new();
+
+    private string? _selectedPdfPath;
+
+    private BookCoverCandidate? _selectedCover;
+
+    private string? _selectedCoverPath;
 
     public NewDocumentWindow(
         DocumentRepository repository,
@@ -23,45 +34,157 @@ public partial class NewDocumentWindow : Window
     {
         InitializeComponent();
 
-        _repository =
-            repository;
+        _repository = repository;
 
-        _s3Service =
-            new S3Service(settings);
+        _openLibraryService = new OpenLibraryService();
+        _s3Service = new S3Service(settings);
 
-        UploadProgressPanel.IsVisible =
-            false;
+        CoverCandidatesListBox.ItemsSource =
+            _coverCandidates;
     }
 
-    private async void BrowsePdf_Click(
+    /*
+     * Web cover search
+     */
+    private async void SearchCover_Click(
         object? sender,
         RoutedEventArgs e)
     {
-        if (!SaveButton.IsEnabled)
+        await SearchCoversAsync();
+    }
+
+    private async Task SearchCoversAsync()
+    {
+        var title =
+            TitleTextBox.Text?.Trim() ?? "";
+
+        var author =
+            AuthorTextBox.Text?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(title) &&
+            string.IsNullOrWhiteSpace(author))
+        {
+            await ShowMessageAsync(
+                "Please enter a title or author.");
+
+            return;
+        }
+
+        try
+        {
+            SearchCoverButton.IsEnabled = false;
+            SearchCoverButton.Content = "Searching...";
+
+            _coverCandidates.Clear();
+
+            _selectedCover = null;
+            _selectedCoverPath = null;
+
+            CoverCandidatesListBox.SelectedItem = null;
+
+            SelectedCoverImage.Source = null;
+            SelectedCoverTitle.Text = "";
+            SelectedCoverAuthor.Text = "";
+
+            var results =
+                await _openLibraryService.SearchAsync(
+                    title,
+                    author);
+
+            foreach (var result in results)
+            {
+                _coverCandidates.Add(result);
+            }
+
+            if (_coverCandidates.Count == 0)
+            {
+                await ShowMessageAsync(
+                    "No cover candidates were found.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageAsync(
+                $"Cover search failed.\n\n{ex.Message}");
+        }
+        finally
+        {
+            SearchCoverButton.IsEnabled = true;
+            SearchCoverButton.Content = "Search Web";
+        }
+    }
+
+    /*
+     * Select web cover
+     */
+    private async void CoverCandidatesListBox_SelectionChanged(
+        object? sender,
+        SelectionChangedEventArgs e)
+    {
+        if (CoverCandidatesListBox.SelectedItem
+            is not BookCoverCandidate candidate)
         {
             return;
         }
 
+        _selectedCover = candidate;
+
+        /*
+         * Web cover is selected.
+         * Clear locally selected cover.
+         */
+        _selectedCoverPath = null;
+
+        SelectedCoverTitle.Text =
+            candidate.Title;
+
+        SelectedCoverAuthor.Text =
+            candidate.Author;
+
+        if (string.IsNullOrWhiteSpace(
+                candidate.CoverUrl))
+        {
+            SelectedCoverImage.Source = null;
+            return;
+        }
+
+        try
+        {
+            using var httpClient =
+                new System.Net.Http.HttpClient();
+
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
+                "Claudel/1.0 (book management application)");
+
+            var bytes =
+                await httpClient.GetByteArrayAsync(
+                    candidate.CoverUrl);
+
+            await using var stream =
+                new MemoryStream(bytes);
+
+            SelectedCoverImage.Source =
+                new Bitmap(stream);
+        }
+        catch
+        {
+            SelectedCoverImage.Source = null;
+        }
+    }
+
+    /*
+     * Upload local cover image
+     */
+    private async void UploadCover_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
         var files =
             await StorageProvider.OpenFilePickerAsync(
-                new FilePickerOpenOptions
+                new Avalonia.Platform.Storage.FilePickerOpenOptions
                 {
-                    Title =
-                        "Select PDF",
-
-                    AllowMultiple =
-                        false,
-
-                    FileTypeFilter =
-                    [
-                        new FilePickerFileType("PDF")
-                        {
-                            Patterns =
-                            [
-                                "*.pdf"
-                            ]
-                        }
-                    ]
+                    Title = "Select Cover Image",
+                    AllowMultiple = false
                 });
 
         if (files.Count == 0)
@@ -69,254 +192,413 @@ public partial class NewDocumentWindow : Window
             return;
         }
 
-        var file =
-            files[0];
+        var file = files[0];
 
-        _pdfPath =
+        var path =
             file.Path.LocalPath;
 
-        PdfPathTextBox.Text =
-            _pdfPath;
-    }
+        if (string.IsNullOrWhiteSpace(path) ||
+            !File.Exists(path))
+        {
+            await ShowMessageAsync(
+                "The selected image could not be accessed.");
 
-    private async void Save_Click(
-        object? sender,
-        RoutedEventArgs e)
-    {
+            return;
+        }
+
+        var extension =
+            Path.GetExtension(path);
+
+        if (!IsSupportedImageExtension(extension))
+        {
+            await ShowMessageAsync(
+                "Please select a JPG, JPEG, PNG, or WebP image.");
+
+            return;
+        }
+
         try
         {
-            var title =
-                TitleTextBox.Text?.Trim() ?? "";
+            /*
+             * Load the image into memory first.
+             */
+            await using var stream =
+                File.OpenRead(path);
 
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                await ShowErrorAsync(
-                    "Title is required.");
+            var bitmap =
+                new Bitmap(stream);
 
-                return;
-            }
+            /*
+             * Local image is selected.
+             * Clear web cover selection.
+             */
+            _selectedCover = null;
 
-            int? year = null;
+            CoverCandidatesListBox.SelectedItem = null;
 
-            var yearText =
-                YearTextBox.Text?.Trim() ?? "";
+            _selectedCoverPath = path;
 
-            if (!string.IsNullOrWhiteSpace(yearText))
-            {
-                if (!int.TryParse(
-                        yearText,
-                        out var parsedYear))
-                {
-                    await ShowErrorAsync(
-                        "Year must be a number.");
+            SelectedCoverImage.Source =
+                bitmap;
 
-                    return;
-                }
+            SelectedCoverTitle.Text =
+                Path.GetFileName(path);
 
-                year =
-                    parsedYear;
-            }
-
-            // PDFは任意。
-            // 選択されている場合だけ存在確認・拡張子確認を行う。
-            if (!string.IsNullOrWhiteSpace(_pdfPath))
-            {
-                if (!File.Exists(_pdfPath))
-                {
-                    await ShowErrorAsync(
-                        "PDF file was not found.");
-
-                    return;
-                }
-
-                if (!string.Equals(
-                        Path.GetExtension(_pdfPath),
-                        ".pdf",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    await ShowErrorAsync(
-                        "Only PDF files are supported.");
-
-                    return;
-                }
-            }
-
-            SaveButton.IsEnabled =
-                false;
-
-            CancelButton.IsEnabled =
-                false;
-
-            BrowsePdfButton.IsEnabled =
-                false;
-
-            TitleTextBox.IsEnabled =
-                false;
-
-            AuthorTextBox.IsEnabled =
-                false;
-
-            CategoryTextBox.IsEnabled =
-                false;
-
-            TagsTextBox.IsEnabled =
-                false;
-
-            YearTextBox.IsEnabled =
-                false;
-
-            var document =
-                new Document
-                {
-                    Title =
-                        title,
-
-                    Author =
-                        AuthorTextBox.Text?.Trim() ?? "",
-
-                    Category =
-                        CategoryTextBox.Text?.Trim() ?? "",
-
-                    Tags =
-                        TagsTextBox.Text?.Trim() ?? "",
-
-                    Year =
-                        year,
-
-                    S3Key =
-                        ""
-                };
-
-            // PDFが選択されている場合だけS3へアップロード
-            if (!string.IsNullOrWhiteSpace(_pdfPath))
-            {
-                UploadProgressPanel.IsVisible =
-                    true;
-
-                UploadProgressBar.Value =
-                    0;
-
-                UploadProgressText.Text =
-                    "0%";
-
-                UploadStatusText.Text =
-                    "Uploading PDF...";
-
-                var objectKey =
-                    $"pdf/{Guid.NewGuid():N}.pdf";
-
-                var progress =
-                    new Progress<double>(
-                        percent =>
-                        {
-                            UploadProgressBar.Value =
-                                Math.Clamp(
-                                    percent,
-                                    0,
-                                    100);
-
-                            UploadProgressText.Text =
-                                $"{percent:0}%";
-
-                            UploadStatusText.Text =
-                                $"Uploading PDF... {percent:0}%";
-                        });
-
-                await _s3Service.UploadPdfAsync(
-                    _pdfPath,
-                    objectKey,
-                    progress);
-
-                document.S3Key =
-                    objectKey;
-
-                UploadProgressBar.Value =
-                    100;
-
-                UploadProgressText.Text =
-                    "100%";
-
-                UploadStatusText.Text =
-                    "Saving document...";
-            }
-
-            await _repository.CreateAsync(
-                document);
-
-            Close();
+            SelectedCoverAuthor.Text =
+                "Local image";
         }
         catch (Exception ex)
         {
-            SaveButton.IsEnabled =
-                true;
-
-            CancelButton.IsEnabled =
-                true;
-
-            BrowsePdfButton.IsEnabled =
-                true;
-
-            TitleTextBox.IsEnabled =
-                true;
-
-            AuthorTextBox.IsEnabled =
-                true;
-
-            CategoryTextBox.IsEnabled =
-                true;
-
-            TagsTextBox.IsEnabled =
-                true;
-
-            YearTextBox.IsEnabled =
-                true;
-
-            await ShowErrorAsync(
-                $"文書の登録に失敗しました。\n\n{ex.Message}");
+            await ShowMessageAsync(
+                $"Failed to load the image.\n\n{ex.Message}");
         }
     }
 
-    private void Cancel_Click(
+    private static bool IsSupportedImageExtension(
+        string? extension)
+    {
+        return string.Equals(
+                   extension,
+                   ".jpg",
+                   StringComparison.OrdinalIgnoreCase)
+               ||
+               string.Equals(
+                   extension,
+                   ".jpeg",
+                   StringComparison.OrdinalIgnoreCase)
+               ||
+               string.Equals(
+                   extension,
+                   ".png",
+                   StringComparison.OrdinalIgnoreCase)
+               ||
+               string.Equals(
+                   extension,
+                   ".webp",
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
+    /*
+     * Select PDF
+     */
+    private async void SelectPdf_Click(
         object? sender,
         RoutedEventArgs e)
     {
-        if (!SaveButton.IsEnabled)
+        var files =
+            await StorageProvider.OpenFilePickerAsync(
+                new Avalonia.Platform.Storage.FilePickerOpenOptions
+                {
+                    Title = "Select PDF",
+                    AllowMultiple = false
+                });
+
+        if (files.Count == 0)
         {
             return;
         }
 
-        Close();
+        var file = files[0];
+
+        var path =
+            file.Path.LocalPath;
+
+        if (string.IsNullOrWhiteSpace(path) ||
+            !File.Exists(path))
+        {
+            await ShowMessageAsync(
+                "The selected file could not be accessed.");
+
+            return;
+        }
+
+        if (!string.Equals(
+                Path.GetExtension(path),
+                ".pdf",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            await ShowMessageAsync(
+                "Please select a PDF file.");
+
+            return;
+        }
+
+        _selectedPdfPath = path;
+
+        PdfFileTextBlock.Text =
+            Path.GetFileName(path);
     }
 
-    private async Task ShowErrorAsync(
-        string message)
+    /*
+     * Create document
+     */
+    private async void Create_Click(
+        object? sender,
+        RoutedEventArgs e)
     {
-        var dialog =
-            new Window
+        await CreateDocumentAsync();
+    }
+
+    private async Task CreateDocumentAsync()
+    {
+        var title =
+            TitleTextBox.Text?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            await ShowMessageAsync(
+                "Title is required.");
+
+            return;
+        }
+
+        try
+        {
+            SetInputEnabled(false);
+
+            string? pdfS3Key = null;
+
+            string? coverS3Key = null;
+
+            /*
+             * PDF
+             */
+            if (!string.IsNullOrWhiteSpace(
+                    _selectedPdfPath))
             {
-                Title =
-                    "Error",
+                pdfS3Key =
+                    $"pdf/{Guid.NewGuid():N}.pdf";
 
-                Width =
-                    500,
+                await _s3Service.UploadPdfAsync(
+                    _selectedPdfPath,
+                    pdfS3Key);
+            }
 
-                Height =
-                    200,
+            /*
+             * Cover
+             *
+             * Priority:
+             * 1. Local image
+             * 2. Open Library
+             */
+            if (!string.IsNullOrWhiteSpace(
+                    _selectedCoverPath))
+            {
+                coverS3Key =
+                    await UploadLocalCoverAsync(
+                        _selectedCoverPath);
+            }
+            else if (_selectedCover != null &&
+                     !string.IsNullOrWhiteSpace(
+                         _selectedCover.CoverUrl))
+            {
+                coverS3Key =
+                    await UploadWebCoverAsync(
+                        _selectedCover);
+            }
 
-                Content =
-                    new TextBlock
-                    {
-                        Text =
-                            message,
+            /*
+             * Metadata
+             */
+            int? year = null;
 
-                        TextWrapping =
-                            Avalonia.Media.TextWrapping.Wrap,
+            if (int.TryParse(
+                    YearTextBox.Text?.Trim(),
+                    out var parsedYear))
+            {
+                year = parsedYear;
+            }
 
-                        Margin =
-                            new Avalonia.Thickness(20)
-                    }
+            var document = new Document
+            {
+                Title = title,
+
+                Author =
+                    AuthorTextBox.Text?.Trim() ?? "",
+
+                Category =
+                    CategoryTextBox.Text?.Trim() ?? "",
+
+                Year = year,
+
+                Tags = "",
+
+                S3Key =
+                    pdfS3Key ?? "",
+
+                CoverS3Key =
+                    coverS3Key
             };
 
-        await dialog.ShowDialog(this);
+            await _repository.CreateAsync(
+                document);
+
+            Close(true);
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageAsync(
+                $"Failed to create document.\n\n{ex.Message}");
+        }
+        finally
+        {
+            SetInputEnabled(true);
+        }
+    }
+
+    /*
+     * Upload local cover to S3
+     */
+    private async Task<string> UploadLocalCoverAsync(
+        string filePath)
+    {
+        var extension =
+            Path.GetExtension(filePath)
+                .ToLowerInvariant();
+
+        var s3Extension =
+            extension switch
+            {
+                ".jpeg" => ".jpg",
+                _ => extension
+            };
+
+        var s3Key =
+            $"covers/{Guid.NewGuid():N}{s3Extension}";
+
+        await _s3Service.UploadCoverAsync(
+            filePath,
+            s3Key);
+
+        return s3Key;
+    }
+
+    /*
+     * Download Open Library cover,
+     * then upload it to S3.
+     */
+    private async Task<string?> UploadWebCoverAsync(
+        BookCoverCandidate candidate)
+    {
+        var tempCoverPath =
+            await _openLibraryService
+                .DownloadCoverAsync(candidate);
+
+        if (string.IsNullOrWhiteSpace(
+                tempCoverPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var coverS3Key =
+                $"covers/{Guid.NewGuid():N}.jpg";
+
+            await _s3Service.UploadCoverAsync(
+                tempCoverPath,
+                coverS3Key);
+
+            return coverS3Key;
+        }
+        finally
+        {
+            try
+            {
+                File.Delete(tempCoverPath);
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    /*
+     * Enable / disable controls
+     */
+    private void SetInputEnabled(
+        bool enabled)
+    {
+        TitleTextBox.IsEnabled =
+            enabled;
+
+        AuthorTextBox.IsEnabled =
+            enabled;
+
+        CategoryTextBox.IsEnabled =
+            enabled;
+
+        YearTextBox.IsEnabled =
+            enabled;
+
+        SearchCoverButton.IsEnabled =
+            enabled;
+
+        UploadCoverButton.IsEnabled =
+            enabled;
+
+        CoverCandidatesListBox.IsEnabled =
+            enabled;
+
+        PdfFileTextBlock.IsEnabled =
+            enabled;
+    }
+
+    /*
+     * Cancel
+     */
+    private void Cancel_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        Close(false);
+    }
+
+    /*
+     * Message dialog
+     */
+    private async Task ShowMessageAsync(
+        string message)
+    {
+        var window = new Window
+        {
+            Title = "Claudel",
+            Width = 420,
+            Height = 180,
+            WindowStartupLocation =
+                WindowStartupLocation.CenterOwner
+        };
+
+        var button = new Button
+        {
+            Content = "OK",
+            Width = 80,
+            HorizontalAlignment =
+                Avalonia.Layout.HorizontalAlignment.Right
+        };
+
+        button.Click += (_, _) =>
+        {
+            window.Close();
+        };
+
+        window.Content = new StackPanel
+        {
+            Margin = new Thickness(16),
+            Spacing = 12,
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = message,
+                    TextWrapping =
+                        Avalonia.Media.TextWrapping.Wrap
+                },
+
+                button
+            }
+        };
+
+        await window.ShowDialog(this);
     }
 }

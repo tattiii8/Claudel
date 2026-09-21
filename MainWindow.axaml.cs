@@ -19,6 +19,8 @@ public partial class MainWindow : Window
 
     private AppSettings? _settings;
 
+    private CoverCacheService? _coverCacheService;
+
     public ObservableCollection<Document> Documents { get; } = new();
 
     public MainWindow()
@@ -84,6 +86,9 @@ public partial class MainWindow : Window
 
         _repository =
             new DocumentRepository(database);
+
+        _coverCacheService =
+            new CoverCacheService(_settings);
     }
 
     private async Task OpenSettingsAsync()
@@ -129,44 +134,42 @@ public partial class MainWindow : Window
     }
 
     private async void DocumentListBox_DoubleTapped(
-    object? sender,
-    TappedEventArgs e)
+        object? sender,
+        TappedEventArgs e)
     {
-    if (DocumentListBox.SelectedItem is not Document document)
-    {
-        return;
+        if (DocumentListBox.SelectedItem
+            is not Document document)
+        {
+            return;
+        }
+
+        if (_settings == null)
+        {
+            await ShowErrorAsync(
+                "Settings are not configured.");
+
+            return;
+        }
+
+        if (_repository == null)
+        {
+            await ShowErrorAsync(
+                "MySQL is not configured.");
+
+            return;
+        }
+
+        var window =
+            new DocumentWindow(
+                document,
+                _settings,
+                _repository);
+
+        await window.ShowDialog(this);
+
+        await LoadDocumentsAsync(
+            SearchTextBox.Text ?? "");
     }
-
-    if (_settings == null)
-    {
-        await ShowErrorAsync(
-            "Settings are not configured.");
-
-        return;
-    }
-
-    if (_repository == null)
-    {
-        await ShowErrorAsync(
-            "MySQL is not configured.");
-
-        return;
-    }
-
-    var window =
-        new DocumentWindow(
-            document,
-            _settings,
-            _repository);
-
-    await window.ShowDialog(this);
-
-    // 編集・削除後に一覧を再取得
-    await LoadDocumentsAsync(
-        SearchTextBox.Text ?? "");
-    }
-
-
 
     private async void NewDocument_Click(
         object? sender,
@@ -229,6 +232,22 @@ public partial class MainWindow : Window
 
             foreach (var document in documents)
             {
+                if (_coverCacheService != null &&
+                    !string.IsNullOrWhiteSpace(
+                        document.CoverS3Key))
+                {
+                    try
+                    {
+                        document.CoverImage =
+                            await _coverCacheService
+                                .GetCoverAsync(document);
+                    }
+                    catch
+                    {
+                        document.CoverImage = null;
+                    }
+                }
+
                 Documents.Add(document);
             }
         }
@@ -252,23 +271,25 @@ public partial class MainWindow : Window
     private async Task ShowErrorAsync(
         string message)
     {
-        var dialog = new Window
-        {
-            Title = "Error",
-            Width = 500,
-            Height = 200,
-
-            Content = new TextBlock
+        var dialog =
+            new Window
             {
-                Text = message,
+                Title = "Error",
+                Width = 500,
+                Height = 200,
 
-                TextWrapping =
-                    Avalonia.Media.TextWrapping.Wrap,
+                Content =
+                    new TextBlock
+                    {
+                        Text = message,
 
-                Margin =
-                    new Avalonia.Thickness(20)
-            }
-        };
+                        TextWrapping =
+                            Avalonia.Media.TextWrapping.Wrap,
+
+                        Margin =
+                            new Avalonia.Thickness(20)
+                    }
+            };
 
         await dialog.ShowDialog(this);
     }
