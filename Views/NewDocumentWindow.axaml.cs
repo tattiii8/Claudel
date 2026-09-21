@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -129,10 +131,6 @@ public partial class NewDocumentWindow : Window
 
         _selectedCover = candidate;
 
-        /*
-         * Web cover is selected.
-         * Clear locally selected cover.
-         */
         _selectedCoverPath = null;
 
         SelectedCoverTitle.Text =
@@ -219,19 +217,12 @@ public partial class NewDocumentWindow : Window
 
         try
         {
-            /*
-             * Load the image into memory first.
-             */
             await using var stream =
                 File.OpenRead(path);
 
             var bitmap =
                 new Bitmap(stream);
 
-            /*
-             * Local image is selected.
-             * Clear web cover selection.
-             */
             _selectedCover = null;
 
             CoverCandidatesListBox.SelectedItem = null;
@@ -398,37 +389,124 @@ public partial class NewDocumentWindow : Window
             }
 
             /*
-             * Metadata
+             * Publication date
              */
-            int? year = null;
+            DateTime? publicationDate = null;
 
-            if (int.TryParse(
-                    YearTextBox.Text?.Trim(),
-                    out var parsedYear))
+            var publicationDateText =
+                PublicationDateTextBox.Text?.Trim() ?? "";
+
+            if (!string.IsNullOrWhiteSpace(
+                    publicationDateText))
             {
-                year = parsedYear;
+                if (!DateTime.TryParseExact(
+                        publicationDateText,
+                        "yyyy-MM-dd",
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None,
+                        out var parsedDate))
+                {
+                    await ShowMessageAsync(
+                        "Publication Date must be in yyyy-MM-dd format.");
+
+                    return;
+                }
+
+                publicationDate =
+                    parsedDate.Date;
             }
 
-            var document = new Document
+            /*
+             * Authors
+             */
+            var authors =
+                new List<Author>();
+
+            var authorLines =
+                (AuthorTextBox.Text ?? "")
+                    .Split(
+                        new[] { "\r\n", "\n", "\r" },
+                        StringSplitOptions.RemoveEmptyEntries);
+
+            var authorOrder = 1;
+
+            foreach (var authorName in authorLines)
             {
-                Title = title,
+                var name =
+                    authorName.Trim();
 
-                Author =
-                    AuthorTextBox.Text?.Trim() ?? "",
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    continue;
+                }
 
-                Category =
-                    CategoryTextBox.Text?.Trim() ?? "",
+                authors.Add(
+                    new Author
+                    {
+                        Name = name,
+                        Order = authorOrder++
+                    });
+            }
 
-                Year = year,
+            /*
+             * Tags
+             */
+            var tags =
+                new List<Tag>();
 
-                Tags = "",
+            var tagNames =
+                (TagsTextBox.Text ?? "")
+                    .Split(
+                        new[] { ',', '、', '\r', '\n' },
+                        StringSplitOptions.RemoveEmptyEntries);
 
-                S3Key =
-                    pdfS3Key ?? "",
+            foreach (var tagName in tagNames)
+            {
+                var name =
+                    tagName.Trim();
 
-                CoverS3Key =
-                    coverS3Key
-            };
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    continue;
+                }
+
+                if (tags.Any(
+                        x => string.Equals(
+                            x.Name,
+                            name,
+                            StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                tags.Add(
+                    new Tag
+                    {
+                        Name = name
+                    });
+            }
+
+            var document =
+                new Document
+                {
+                    Title = title,
+
+                    Authors = authors,
+
+                    Category =
+                        CategoryTextBox.Text?.Trim() ?? "",
+
+                    Tags = tags,
+
+                    PublicationDate =
+                        publicationDate,
+
+                    S3Key =
+                        pdfS3Key ?? "",
+
+                    CoverS3Key =
+                        coverS3Key ?? ""
+                };
 
             await _repository.CreateAsync(
                 document);
@@ -528,7 +606,10 @@ public partial class NewDocumentWindow : Window
         CategoryTextBox.IsEnabled =
             enabled;
 
-        YearTextBox.IsEnabled =
+        TagsTextBox.IsEnabled =
+            enabled;
+
+        PublicationDateTextBox.IsEnabled =
             enabled;
 
         SearchCoverButton.IsEnabled =

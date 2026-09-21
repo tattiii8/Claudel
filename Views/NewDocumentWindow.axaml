@@ -5,262 +5,280 @@
      FontFamily="Segoe UI"
      Title="New Document"
      Width="900"
-     Height="760"
+     Height="800"
      MinWidth="760"
-     MinHeight="640"
+     MinHeight="680"
      WindowStartupLocation="CenterOwner">
 
-<Window.Styles>
+    <Window.Styles>
 
-    <Style Selector="TextBlock">
-        <Setter Property="FontSize" Value="12"/>
-    </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
 
-    <Style Selector="TextBox">
-        <Setter Property="FontSize" Value="12"/>
-        <Setter Property="Padding" Value="6,4"/>
-        <Setter Property="CornerRadius" Value="0"/>
-        <Setter Property="MinHeight" Value="28"/>
-    </Style>
+        <Style Selector="TextBox">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="MinHeight" Value="28"/>
+        </Style>
 
-    <Style Selector="Button">
-        <Setter Property="FontSize" Value="12"/>
-        <Setter Property="Padding" Value="9,4"/>
-        <Setter Property="CornerRadius" Value="0"/>
-        <Setter Property="MinHeight" Value="28"/>
-    </Style>
+        <Style Selector="Button">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="9,4"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="MinHeight" Value="28"/>
+        </Style>
 
-    <Style Selector="ListBox">
-        <Setter Property="FontSize" Value="12"/>
-    </Style>
+        <Style Selector="ListBox">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
 
-    <Style Selector="ListBoxItem">
-        <Setter Property="Padding" Value="6"/>
-        <Setter Property="Margin" Value="0"/>
-    </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
 
-</Window.Styles>
+    </Window.Styles>
 
-<Grid Margin="16"
-      RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto"
-      RowSpacing="10">
+    <Grid Margin="16"
+          RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto"
+          RowSpacing="10">
 
-    <!-- Title -->
-    <Grid Grid.Row="0"
-          ColumnDefinitions="100,*">
+        <!-- Title -->
+        <Grid Grid.Row="0"
+              ColumnDefinitions="100,*">
 
-        <TextBlock Text="Title"
-                   VerticalAlignment="Center"/>
+            <TextBlock Text="Title"
+                       VerticalAlignment="Center"/>
 
-        <TextBox Grid.Column="1"
-                 x:Name="TitleTextBox"
-                 PlaceholderText="Title"/>
-
-    </Grid>
-
-    <!-- Author -->
-    <Grid Grid.Row="1"
-          ColumnDefinitions="100,*">
-
-        <TextBlock Text="Author"
-                   VerticalAlignment="Top"
-                   Margin="0,7,0,0"/>
-
-        <TextBox Grid.Column="1"
-                 x:Name="AuthorTextBox"
-                 PlaceholderText="One author per line"
-                 AcceptsReturn="True"
-                 TextWrapping="Wrap"
-                 VerticalContentAlignment="Top"
-                 MinHeight="80"
-                 MaxHeight="120"/>
-
-    </Grid>
-
-    <!-- Category -->
-    <Grid Grid.Row="2"
-          ColumnDefinitions="100,*">
-
-        <TextBlock Text="Category"
-                   VerticalAlignment="Center"/>
-
-        <TextBox Grid.Column="1"
-                 x:Name="CategoryTextBox"
-                 PlaceholderText="Category"/>
-
-    </Grid>
-
-    <!-- Year -->
-    <Grid Grid.Row="3"
-          ColumnDefinitions="100,*">
-
-        <TextBlock Text="Year"
-                   VerticalAlignment="Center"/>
-
-        <TextBox Grid.Column="1"
-                 x:Name="YearTextBox"
-                 PlaceholderText="Year"/>
-
-    </Grid>
-
-    <!-- Main content -->
-    <Grid Grid.Row="4"
-          ColumnDefinitions="*,260"
-          ColumnSpacing="16">
-
-        <!-- Search results -->
-        <Grid RowDefinitions="Auto,*"
-              RowSpacing="8">
-
-            <!-- Cover actions -->
-            <Grid ColumnDefinitions="*,Auto,Auto"
-                  ColumnSpacing="6">
-
-                <TextBlock Text="Web Cover Search"
-                           FontSize="14"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center"/>
-
-                <Button Grid.Column="1"
-                        x:Name="SearchCoverButton"
-                        Content="Search Web"
-                        Click="SearchCover_Click"/>
-
-                <Button Grid.Column="2"
-                        x:Name="UploadCoverButton"
-                        Content="Upload Image"
-                        Click="UploadCover_Click"/>
-
-            </Grid>
-
-            <!-- Search candidates -->
-            <ListBox Grid.Row="1"
-                     x:Name="CoverCandidatesListBox"
-                     SelectionChanged="CoverCandidatesListBox_SelectionChanged">
-
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-
-                <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="models:BookCoverCandidate">
-
-                        <Border Width="150"
-                                Height="265"
-                                Margin="4"
-                                Padding="6"
-                                BorderThickness="1">
-
-                            <Grid RowDefinitions="190,Auto,Auto,*"
-                                  RowSpacing="4">
-
-                                <Image Source="{Binding CoverUrl}"
-                                       Stretch="Uniform"/>
-
-                                <TextBlock Grid.Row="1"
-                                           Text="{Binding Title}"
-                                           TextWrapping="Wrap"
-                                           MaxLines="2"/>
-
-                                <TextBlock Grid.Row="2"
-                                           Text="{Binding Author}"
-                                           Opacity="0.65"
-                                           TextWrapping="Wrap"
-                                           MaxLines="1"/>
-
-                                <TextBlock Grid.Row="3"
-                                           Text="{Binding DisplayYear}"
-                                           Opacity="0.55"/>
-
-                            </Grid>
-
-                        </Border>
-
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-
-            </ListBox>
+            <TextBox Grid.Column="1"
+                     x:Name="TitleTextBox"
+                     PlaceholderText="Title"/>
 
         </Grid>
 
-        <!-- Selected cover -->
-        <Border Grid.Column="1"
-                BorderThickness="1"
-                Padding="12">
+        <!-- Author -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="100,*">
 
-            <Grid RowDefinitions="Auto,*,Auto"
-                  RowSpacing="10">
+            <TextBlock Text="Author"
+                       VerticalAlignment="Top"
+                       Margin="0,7,0,0"/>
 
-                <TextBlock Text="Selected Cover"
-                           FontSize="14"
-                           FontWeight="SemiBold"/>
+            <TextBox Grid.Column="1"
+                     x:Name="AuthorTextBox"
+                     PlaceholderText="One author per line"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalContentAlignment="Top"
+                     MinHeight="80"
+                     MaxHeight="120"/>
 
-                <Border Grid.Row="1"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
+        </Grid>
 
-                    <Image x:Name="SelectedCoverImage"
-                           Width="210"
-                           Height="300"
-                           Stretch="Uniform"/>
+        <!-- Category -->
+        <Grid Grid.Row="2"
+              ColumnDefinitions="100,*">
 
-                </Border>
+            <TextBlock Text="Category"
+                       VerticalAlignment="Center"/>
 
-                <StackPanel Grid.Row="2"
-                            Spacing="4">
+            <TextBox Grid.Column="1"
+                     x:Name="CategoryTextBox"
+                     PlaceholderText="Category"/>
 
-                    <TextBlock x:Name="SelectedCoverTitle"
-                               TextWrapping="Wrap"/>
+        </Grid>
 
-                    <TextBlock x:Name="SelectedCoverAuthor"
-                               Opacity="0.65"
-                               TextWrapping="Wrap"/>
+        <!-- Tags -->
+        <Grid Grid.Row="3"
+              ColumnDefinitions="100,*">
 
-                </StackPanel>
+            <TextBlock Text="Tags"
+                       VerticalAlignment="Top"
+                       Margin="0,7,0,0"/>
+
+            <TextBox Grid.Column="1"
+                     x:Name="TagsTextBox"
+                     PlaceholderText="キリスト教, 中世, フランス"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalContentAlignment="Top"
+                     MinHeight="50"
+                     MaxHeight="80"/>
+
+        </Grid>
+
+        <!-- Publication Date -->
+        <Grid Grid.Row="4"
+              ColumnDefinitions="100,*">
+
+            <TextBlock Text="Publication Date"
+                       VerticalAlignment="Center"/>
+
+            <TextBox Grid.Column="1"
+                     x:Name="PublicationDateTextBox"
+                     PlaceholderText="yyyy-MM-dd"/>
+
+        </Grid>
+
+        <!-- Main content -->
+        <Grid Grid.Row="5"
+              ColumnDefinitions="*,260"
+              ColumnSpacing="16">
+
+            <!-- Search results -->
+            <Grid RowDefinitions="Auto,*"
+                  RowSpacing="8">
+
+                <!-- Cover actions -->
+                <Grid ColumnDefinitions="*,Auto,Auto"
+                      ColumnSpacing="6">
+
+                    <TextBlock Text="Web Cover Search"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="1"
+                            x:Name="SearchCoverButton"
+                            Content="Search Web"
+                            Click="SearchCover_Click"/>
+
+                    <Button Grid.Column="2"
+                            x:Name="UploadCoverButton"
+                            Content="Upload Image"
+                            Click="UploadCover_Click"/>
+
+                </Grid>
+
+                <!-- Search candidates -->
+                <ListBox Grid.Row="1"
+                         x:Name="CoverCandidatesListBox"
+                         SelectionChanged="CoverCandidatesListBox_SelectionChanged">
+
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:BookCoverCandidate">
+
+                            <Border Width="150"
+                                    Height="265"
+                                    Margin="4"
+                                    Padding="6"
+                                    BorderThickness="1">
+
+                                <Grid RowDefinitions="190,Auto,Auto,*"
+                                      RowSpacing="4">
+
+                                    <Image Source="{Binding CoverUrl}"
+                                           Stretch="Uniform"/>
+
+                                    <TextBlock Grid.Row="1"
+                                               Text="{Binding Title}"
+                                               TextWrapping="Wrap"
+                                               MaxLines="2"/>
+
+                                    <TextBlock Grid.Row="2"
+                                               Text="{Binding Author}"
+                                               Opacity="0.65"
+                                               TextWrapping="Wrap"
+                                               MaxLines="1"/>
+
+                                    <TextBlock Grid.Row="3"
+                                               Text="{Binding DisplayYear}"
+                                               Opacity="0.55"/>
+
+                                </Grid>
+
+                            </Border>
+
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+
+                </ListBox>
 
             </Grid>
 
-        </Border>
+            <!-- Selected cover -->
+            <Border Grid.Column="1"
+                    BorderThickness="1"
+                    Padding="12">
+
+                <Grid RowDefinitions="Auto,*,Auto"
+                      RowSpacing="10">
+
+                    <TextBlock Text="Selected Cover"
+                               FontSize="14"
+                               FontWeight="SemiBold"/>
+
+                    <Border Grid.Row="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+
+                        <Image x:Name="SelectedCoverImage"
+                               Width="210"
+                               Height="300"
+                               Stretch="Uniform"/>
+
+                    </Border>
+
+                    <StackPanel Grid.Row="2"
+                                Spacing="4">
+
+                        <TextBlock x:Name="SelectedCoverTitle"
+                                   TextWrapping="Wrap"/>
+
+                        <TextBlock x:Name="SelectedCoverAuthor"
+                                   Opacity="0.65"
+                                   TextWrapping="Wrap"/>
+
+                    </StackPanel>
+
+                </Grid>
+
+            </Border>
+
+        </Grid>
+
+        <!-- PDF -->
+        <Grid Grid.Row="6"
+              ColumnDefinitions="100,*,Auto"
+              ColumnSpacing="8">
+
+            <TextBlock Text="PDF"
+                       VerticalAlignment="Center"/>
+
+            <TextBlock Grid.Column="1"
+                       x:Name="PdfFileTextBlock"
+                       VerticalAlignment="Center"
+                       Text="No file selected"
+                       TextTrimming="CharacterEllipsis"/>
+
+            <Button Grid.Column="2"
+                    Content="Select PDF"
+                    Click="SelectPdf_Click"/>
+
+        </Grid>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="7"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+
+            <Button Content="Cancel"
+                    Click="Cancel_Click"/>
+
+            <Button Content="Create"
+                    Click="Create_Click"/>
+
+        </StackPanel>
 
     </Grid>
-
-    <!-- PDF -->
-    <Grid Grid.Row="5"
-          ColumnDefinitions="100,*,Auto"
-          ColumnSpacing="8">
-
-        <TextBlock Text="PDF"
-                   VerticalAlignment="Center"/>
-
-        <TextBlock Grid.Column="1"
-                   x:Name="PdfFileTextBlock"
-                   VerticalAlignment="Center"
-                   Text="No file selected"
-                   TextTrimming="CharacterEllipsis"/>
-
-        <Button Grid.Column="2"
-                Content="Select PDF"
-                Click="SelectPdf_Click"/>
-
-    </Grid>
-
-    <!-- Buttons -->
-    <StackPanel Grid.Row="6"
-                Orientation="Horizontal"
-                HorizontalAlignment="Right"
-                Spacing="8">
-
-        <Button Content="Cancel"
-                Click="Cancel_Click"/>
-
-        <Button Content="Create"
-                Click="Create_Click"/>
-
-    </StackPanel>
-
-</Grid>
-
 
 </Window>

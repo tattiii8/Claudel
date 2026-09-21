@@ -60,12 +60,10 @@
 
     </Window.Styles>
 
-
     <Grid
         Margin="24"
         RowDefinitions="Auto,Auto,*,Auto"
         RowSpacing="16">
-
 
         <!-- Header -->
 
@@ -82,26 +80,22 @@
             <TextBlock
                 x:Name="AuthorTextBlock"
                 FontSize="12"
-                Opacity="0.55"/>
+                Opacity="0.55"
+                TextWrapping="Wrap"/>
 
         </StackPanel>
-
 
         <!-- Header separator -->
 
         <Separator
             Grid.Row="1"/>
 
-
         <!-- Main tabs -->
 
         <TabControl
             Grid.Row="2">
 
-
-            <!-- ============================================= -->
-            <!-- General                                        -->
-            <!-- ============================================= -->
+            <!-- General -->
 
             <TabItem Header="General">
 
@@ -110,13 +104,12 @@
                     RowDefinitions="*,Auto"
                     RowSpacing="18">
 
-
                     <!-- Metadata -->
 
                     <Grid
                         Grid.Row="0"
                         ColumnDefinitions="110,*"
-                        RowDefinitions="Auto,Auto,Auto"
+                        RowDefinitions="Auto,Auto,Auto,Auto"
                         RowSpacing="14">
 
                         <TextBlock
@@ -131,7 +124,6 @@
                             x:Name="CategoryTextBlock"
                             TextWrapping="Wrap"/>
 
-
                         <TextBlock
                             Grid.Row="1"
                             Grid.Column="0"
@@ -144,20 +136,30 @@
                             x:Name="TagsTextBlock"
                             TextWrapping="Wrap"/>
 
-
                         <TextBlock
                             Grid.Row="2"
                             Grid.Column="0"
                             Classes="label"
-                            Text="Year"/>
+                            Text="Publication Date"/>
 
                         <TextBlock
                             Grid.Row="2"
                             Grid.Column="1"
-                            x:Name="YearTextBlock"/>
+                            x:Name="PublicationDateTextBlock"/>
+
+                        <TextBlock
+                            Grid.Row="3"
+                            Grid.Column="0"
+                            Classes="label"
+                            Text="Authors"/>
+
+                        <TextBlock
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            x:Name="AuthorsTextBlock"
+                            TextWrapping="Wrap"/>
 
                     </Grid>
-
 
                     <!-- General actions -->
 
@@ -192,10 +194,7 @@
 
             </TabItem>
 
-
-            <!-- ============================================= -->
-            <!-- Redmine                                        -->
-            <!-- ============================================= -->
+            <!-- Redmine -->
 
             <TabItem Header="Redmine">
 
@@ -203,7 +202,6 @@
                     Margin="8,18,8,8"
                     RowDefinitions="Auto,Auto,*,Auto"
                     RowSpacing="16">
-
 
                     <!-- Redmine header -->
 
@@ -244,7 +242,6 @@
 
                     </StackPanel>
 
-
                     <!-- Redmine information -->
 
                     <Grid
@@ -265,7 +262,6 @@
                             x:Name="RedmineProjectTextBlock"
                             Text="recherche"/>
 
-
                         <TextBlock
                             Grid.Row="1"
                             Grid.Column="0"
@@ -277,7 +273,6 @@
                             Grid.Column="1"
                             x:Name="RedmineTrackerTextBlock"
                             Text="Lecture"/>
-
 
                         <TextBlock
                             Grid.Row="2"
@@ -293,12 +288,10 @@
 
                     </Grid>
 
-
                     <!-- Empty space -->
 
                     <Border
                         Grid.Row="2"/>
-
 
                     <!-- Redmine actions -->
 
@@ -339,7 +332,6 @@
             </TabItem>
 
         </TabControl>
-
 
         <!-- Bottom spacer -->
 

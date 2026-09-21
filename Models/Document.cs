@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Media.Imaging;
 
 namespace Claudel.Models;
@@ -9,13 +10,15 @@ public class Document
 
     public string Title { get; set; } = "";
 
-    public string Author { get; set; } = "";
+    public List<Author> Authors { get; set; } = new();
 
     public string Category { get; set; } = "";
 
-    public string Tags { get; set; } = "";
+    public List<Tag> Tags { get; set; } = new();
 
-    public int? Year { get; set; }
+    public DateTime? PublicationDate { get; set; }
+
+    public string S3Bucket { get; set; } = "";
 
     public string S3Key { get; set; } = "";
 

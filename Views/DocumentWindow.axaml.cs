@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -46,17 +47,35 @@ public partial class DocumentWindow : Window
         TitleTextBlock.Text =
             _document.Title;
 
+        var authors =
+            _document.Authors
+                .OrderBy(x => x.Order)
+                .Select(x => x.Name)
+                .ToList();
+
         AuthorTextBlock.Text =
-            _document.Author;
+            string.Join(
+                ", ",
+                authors);
+
+        AuthorsTextBlock.Text =
+            string.Join(
+                ", ",
+                authors);
 
         CategoryTextBlock.Text =
             _document.Category;
 
         TagsTextBlock.Text =
-            _document.Tags;
+            string.Join(
+                ", ",
+                _document.Tags
+                    .Select(x => x.Name));
 
-        YearTextBlock.Text =
-            _document.Year?.ToString() ?? "";
+        PublicationDateTextBlock.Text =
+            _document.PublicationDate?
+                .ToString("yyyy-MM-dd")
+            ?? "";
 
         UpdateRedmineDisplay();
     }
@@ -101,7 +120,6 @@ public partial class DocumentWindow : Window
             issueExists;
     }
 
-
     private async void CreateIssue_Click(
         object? sender,
         RoutedEventArgs e)
@@ -123,8 +141,15 @@ public partial class DocumentWindow : Window
             return;
         }
 
+        var authorText =
+            string.Join(
+                ", ",
+                _document.Authors
+                    .OrderBy(x => x.Order)
+                    .Select(x => x.Name));
+
         if (string.IsNullOrWhiteSpace(
-                _document.Author))
+                authorText))
         {
             await ShowErrorAsync(
                 "著者が設定されていません。");
@@ -143,7 +168,7 @@ public partial class DocumentWindow : Window
             var result =
                 await redmineService.CreateIssueAsync(
                     _document.Title,
-                    _document.Author);
+                    authorText);
 
             _document.RedmineIssueId =
                 result.Id;
@@ -181,7 +206,6 @@ public partial class DocumentWindow : Window
                 ex.Message);
         }
     }
-
 
     private async void LinkIssue_Click(
         object? sender,
@@ -274,7 +298,6 @@ public partial class DocumentWindow : Window
         }
     }
 
-
     private async void OpenRedmine_Click(
         object? sender,
         RoutedEventArgs e)
@@ -310,7 +333,6 @@ public partial class DocumentWindow : Window
                 ex.Message);
         }
     }
-
 
     private async void UnlinkIssue_Click(
         object? sender,
@@ -367,7 +389,6 @@ public partial class DocumentWindow : Window
         }
     }
 
-
     private bool HasLinkedIssue()
     {
         return
@@ -376,7 +397,6 @@ public partial class DocumentWindow : Window
             !string.IsNullOrWhiteSpace(
                 _document.RedmineIssueUrl);
     }
-
 
     private void SetRedmineButtonsEnabled(
         bool enabled)
@@ -400,7 +420,6 @@ public partial class DocumentWindow : Window
 
         UpdateRedmineDisplay();
     }
-
 
     private async Task<int?>
         ShowIssueIdDialogAsync()
@@ -564,7 +583,6 @@ public partial class DocumentWindow : Window
         return result;
     }
 
-
     private async Task<bool>
         ShowUnlinkConfirmationAsync()
     {
@@ -683,7 +701,6 @@ public partial class DocumentWindow : Window
         return result;
     }
 
-
     private async Task
         ShowDialogMessageAsync(
             Window owner,
@@ -717,7 +734,6 @@ public partial class DocumentWindow : Window
 
         await dialog.ShowDialog(owner);
     }
-
 
     private async void OpenPdf_Click(
         object? sender,
@@ -757,7 +773,6 @@ public partial class DocumentWindow : Window
                 $"PDFを開けませんでした。\n\n{ex.Message}");
         }
     }
-
 
     private async void Edit_Click(
         object? sender,
@@ -799,7 +814,6 @@ public partial class DocumentWindow : Window
                 ex.Message);
         }
     }
-
 
     private async void Delete_Click(
         object? sender,
@@ -843,7 +857,6 @@ public partial class DocumentWindow : Window
                 ex.Message);
         }
     }
-
 
     private async Task<bool>
         ShowDeleteConfirmationAsync()
@@ -963,14 +976,12 @@ public partial class DocumentWindow : Window
         return result;
     }
 
-
     private void Close_Click(
         object? sender,
         RoutedEventArgs e)
     {
         Close();
     }
-
 
     private async Task
         ShowMessageAsync(
@@ -1004,7 +1015,6 @@ public partial class DocumentWindow : Window
 
         await dialog.ShowDialog(this);
     }
-
 
     private async Task
         ShowErrorAsync(
