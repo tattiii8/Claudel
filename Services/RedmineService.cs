@@ -53,6 +53,7 @@ public class RedmineService
         return client;
     }
 
+
     public async Task TestConnectionAsync()
     {
         using var client =
@@ -73,6 +74,7 @@ public class RedmineService
                 body);
         }
     }
+
 
     public async Task<RedmineIssueResult>
         CreateIssueAsync(
@@ -185,16 +187,21 @@ public class RedmineService
         using var client =
             CreateClient();
 
-        using var response =
+
+        // =========================================
+        // Issue取得
+        // =========================================
+
+        using var issueResponse =
             await client.GetAsync(
                 $"issues/{issueId}.json");
 
-        var responseBody =
-            await response.Content.ReadAsStringAsync();
+        var issueBody =
+            await issueResponse.Content.ReadAsStringAsync();
 
-        if (!response.IsSuccessStatusCode)
+        if (!issueResponse.IsSuccessStatusCode)
         {
-            if ((int)response.StatusCode == 404)
+            if ((int)issueResponse.StatusCode == 404)
             {
                 throw new InvalidOperationException(
                     $"Redmine Issue #{issueId} was not found.");
@@ -202,33 +209,54 @@ public class RedmineService
 
             throw new InvalidOperationException(
                 $"Redmine Issue lookup failed " +
-                $"({(int)response.StatusCode}).\n\n" +
-                responseBody);
+                $"({(int)issueResponse.StatusCode}).\n\n" +
+                issueBody);
         }
 
-        using var document =
+
+        using var issueDocument =
             JsonDocument.Parse(
-                responseBody);
+                issueBody);
 
         var issue =
-            document.RootElement
+            issueDocument.RootElement
                 .GetProperty("issue");
+
+
+        // =========================================
+        // Issue ID
+        // =========================================
 
         var id =
             issue
                 .GetProperty("id")
                 .GetInt32();
 
+
+        // =========================================
+        // Issue URL
+        // =========================================
+
         var url =
             _settings.Url.TrimEnd('/') +
             "/issues/" +
             id;
 
-        var projectIdentifier =
+
+        // =========================================
+        // Issue Project ID
+        // =========================================
+
+        var issueProjectId =
             issue
                 .GetProperty("project")
-                .GetProperty("identifier")
-                .GetString() ?? "";
+                .GetProperty("id")
+                .GetInt32();
+
+
+        // =========================================
+        // Issue Tracker ID
+        // =========================================
 
         var trackerId =
             issue
@@ -236,19 +264,84 @@ public class RedmineService
                 .GetProperty("id")
                 .GetInt32();
 
+
+        // =========================================
+        // Issue Subject
+        // =========================================
+
         var subject =
             issue
                 .GetProperty("subject")
                 .GetString() ?? "";
 
+
+        // =========================================
+        // 設定されているRedmine Projectを取得
+        //
+        // 例:
+        // Project ID = recherche
+        //
+        // GET /projects/recherche.json
+        // =========================================
+
+        using var projectResponse =
+            await client.GetAsync(
+                $"projects/{Uri.EscapeDataString(
+                    _settings.ProjectId.Trim())}.json");
+
+        var projectBody =
+            await projectResponse.Content.ReadAsStringAsync();
+
+        if (!projectResponse.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"Redmine Project lookup failed " +
+                $"({(int)projectResponse.StatusCode}).\n\n" +
+                projectBody);
+        }
+
+
+        using var projectDocument =
+            JsonDocument.Parse(
+                projectBody);
+
+        var project =
+            projectDocument.RootElement
+                .GetProperty("project");
+
+        var configuredProjectId =
+            project
+                .GetProperty("id")
+                .GetInt32();
+
+
+        // =========================================
+        // Projectチェック
+        // =========================================
+
+        if (issueProjectId != configuredProjectId)
+        {
+            throw new InvalidOperationException(
+                "このIssueは現在のRedmine Projectとは異なります。\n\n" +
+                $"Issue Project ID: {issueProjectId}\n" +
+                $"Expected Project ID: {configuredProjectId}\n\n" +
+                $"Configured Project: {_settings.ProjectId}");
+        }
+
+
+        // =========================================
+        // 結果
+        // =========================================
+
         return new RedmineIssueResult(
             id,
             url,
-            projectIdentifier,
+            _settings.ProjectId,
             trackerId,
             subject);
     }
 }
+
 
 public record RedmineIssueResult(
     int Id,
