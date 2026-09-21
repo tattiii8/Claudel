@@ -1,185 +1,314 @@
 <Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        x:Class="Claudel.DocumentEditWindow"
-        Title="Edit Document"
-        FontFamily="Segoe UI"
-        Width="520"
-        Height="590"
-        MinWidth="460"
-        MinHeight="520"
-        WindowStartupLocation="CenterOwner">
+     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+     xmlns:models="using:Claudel.Models"
+     x:Class="Claudel.DocumentEditWindow"
+     Title="Edit Document"
+     FontFamily="Segoe UI"
+     Width="900"
+     Height="760"
+     MinWidth="760"
+     MinHeight="640"
+     WindowStartupLocation="CenterOwner">
 
-    <Window.Styles>
 
-        <Style Selector="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
-        </Style>
+<Window.Styles>
 
-        <Style Selector="TextBlock.label">
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Opacity" Value="0.65"/>
-        </Style>
+    <Style Selector="TextBlock">
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
 
-        <Style Selector="TextBox">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="6,4"/>
-            <Setter Property="CornerRadius" Value="0"/>
-            <Setter Property="MinHeight" Value="28"/>
-        </Style>
+    <Style Selector="TextBlock.label">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Opacity" Value="0.65"/>
+    </Style>
 
-        <Style Selector="Button">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="9,4"/>
-            <Setter Property="CornerRadius" Value="0"/>
-            <Setter Property="MinHeight" Value="28"/>
-        </Style>
+    <Style Selector="TextBox">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="MinHeight" Value="28"/>
+    </Style>
 
-        <Style Selector="ProgressBar">
-            <Setter Property="Height" Value="6"/>
-            <Setter Property="CornerRadius" Value="0"/>
-        </Style>
+    <Style Selector="Button">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="9,4"/>
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="MinHeight" Value="28"/>
+    </Style>
 
-    </Window.Styles>
+    <Style Selector="ProgressBar">
+        <Setter Property="Height" Value="6"/>
+        <Setter Property="CornerRadius" Value="0"/>
+    </Style>
 
-    <ScrollViewer>
+    <Style Selector="ListBox">
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
 
-        <StackPanel
-            Margin="24"
-            Spacing="6">
+    <Style Selector="ListBoxItem">
+        <Setter Property="Padding" Value="6"/>
+        <Setter Property="Margin" Value="0"/>
+    </Style>
 
-            <TextBlock
-                Text="Edit Document"
-                FontSize="17"
-                FontWeight="SemiBold"
-                Margin="0,0,0,12"/>
+</Window.Styles>
 
-            <!-- Title -->
+<ScrollViewer>
 
-            <TextBlock
-                Classes="label"
-                Text="Title"/>
+    <StackPanel
+        Margin="24"
+        Spacing="6">
 
-            <TextBox
-                x:Name="TitleTextBox"/>
+        <TextBlock
+            Text="Edit Document"
+            FontSize="17"
+            FontWeight="SemiBold"
+            Margin="0,0,0,12"/>
 
-            <!-- Author -->
+        <!-- Title -->
 
-            <TextBlock
-                Classes="label"
-                Text="Author"
-                Margin="0,7,0,0"/>
+        <TextBlock
+            Classes="label"
+            Text="Title"/>
 
-            <TextBox
-                x:Name="AuthorTextBox"/>
+        <TextBox
+            x:Name="TitleTextBox"/>
 
-            <!-- Category -->
+        <!-- Author -->
 
-            <TextBlock
-                Classes="label"
-                Text="Category"
-                Margin="0,7,0,0"/>
+        <TextBlock
+            Classes="label"
+            Text="Author"
+            Margin="0,7,0,0"/>
 
-            <TextBox
-                x:Name="CategoryTextBox"/>
+        <TextBox
+            x:Name="AuthorTextBox"
+            AcceptsReturn="True"
+            TextWrapping="Wrap"
+            VerticalContentAlignment="Top"
+            MinHeight="80"
+            MaxHeight="120"
+            Watermark="One author per line"/>
 
-            <!-- Tags -->
+        <!-- Category -->
 
-            <TextBlock
-                Classes="label"
-                Text="Tags"
-                Margin="0,7,0,0"/>
+        <TextBlock
+            Classes="label"
+            Text="Category"
+            Margin="0,7,0,0"/>
 
-            <TextBox
-                x:Name="TagsTextBox"/>
+        <TextBox
+            x:Name="CategoryTextBox"/>
 
-            <!-- Year -->
+        <!-- Tags -->
 
-            <TextBlock
-                Classes="label"
-                Text="Year"
-                Margin="0,7,0,0"/>
+        <TextBlock
+            Classes="label"
+            Text="Tags"
+            Margin="0,7,0,0"/>
 
-            <TextBox
-                x:Name="YearTextBox"/>
+        <TextBox
+            x:Name="TagsTextBox"/>
 
-            <!-- PDF -->
+        <!-- Year -->
 
-            <TextBlock
-                Classes="label"
-                Text="PDF"
-                Margin="0,7,0,0"/>
+        <TextBlock
+            Classes="label"
+            Text="Year"
+            Margin="0,7,0,0"/>
+
+        <TextBox
+            x:Name="YearTextBox"/>
+
+        <!-- Cover -->
+
+        <TextBlock
+            Classes="label"
+            Text="Cover"
+            Margin="0,14,0,0"/>
+
+        <Grid
+            ColumnDefinitions="220,*"
+            ColumnSpacing="14">
+
+            <!-- Current / selected cover -->
+
+            <Border
+                Width="200"
+                Height="280"
+                BorderThickness="1"
+                HorizontalAlignment="Left">
+
+                <Image
+                    x:Name="CoverImage"
+                    Stretch="Uniform"/>
+            </Border>
+
+            <!-- Cover controls -->
 
             <Grid
-                ColumnDefinitions="*,Auto"
-                ColumnSpacing="6">
+                Grid.Column="1"
+                RowDefinitions="Auto,Auto,*"
+                RowSpacing="8">
 
-                <TextBox
-                    x:Name="PdfPathTextBox"
-                    Watermark="No PDF selected"
-                    IsReadOnly="True"/>
+                <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="6">
 
-                <Button
-                    x:Name="BrowsePdfButton"
-                    Grid.Column="1"
-                    Content="Browse..."
-                    Click="BrowsePdf_Click"/>
+                    <Button
+                        x:Name="SearchCoverButton"
+                        Content="Search Web"
+                        Click="SearchCover_Click"/>
+
+                    <Button
+                        x:Name="UploadCoverButton"
+                        Content="Upload Image"
+                        Click="UploadCover_Click"/>
+
+                </StackPanel>
+
+                <TextBlock
+                    Grid.Row="1"
+                    Text="Web Cover Search"
+                    FontSize="13"
+                    FontWeight="SemiBold"
+                    Margin="0,4,0,0"/>
+
+                <ListBox
+                    Grid.Row="2"
+                    x:Name="CoverCandidatesListBox"
+                    SelectionChanged="CoverCandidatesListBox_SelectionChanged">
+
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel
+                                Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate
+                            x:DataType="models:BookCoverCandidate">
+
+                            <Border
+                                Width="110"
+                                Height="190"
+                                Margin="3"
+                                Padding="4"
+                                BorderThickness="1">
+
+                                <Grid
+                                    RowDefinitions="135,Auto,Auto"
+                                    RowSpacing="3">
+
+                                    <Image
+                                        Source="{Binding CoverUrl}"
+                                        Stretch="Uniform"/>
+
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Text="{Binding Title}"
+                                        TextWrapping="Wrap"
+                                        MaxLines="2"
+                                        FontSize="10"/>
+
+                                    <TextBlock
+                                        Grid.Row="2"
+                                        Text="{Binding DisplayYear}"
+                                        Opacity="0.55"
+                                        FontSize="10"/>
+
+                                </Grid>
+
+                            </Border>
+
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+
+                </ListBox>
 
             </Grid>
 
-            <!-- Progress -->
+        </Grid>
 
-            <StackPanel
-                x:Name="UploadProgressPanel"
-                Spacing="4"
-                Margin="0,14,0,0"
-                IsVisible="False">
+        <!-- PDF -->
 
-                <Grid
-                    ColumnDefinitions="*,Auto">
+        <TextBlock
+            Classes="label"
+            Text="PDF"
+            Margin="0,14,0,0"/>
 
-                    <TextBlock
-                        x:Name="UploadStatusText"
-                        Text="Uploading PDF..."
-                        FontSize="11"/>
+        <Grid
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="6">
 
-                    <TextBlock
-                        x:Name="UploadProgressText"
-                        Grid.Column="1"
-                        Text="0%"
-                        FontSize="11"/>
+            <TextBox
+                x:Name="PdfPathTextBox"
+                Watermark="No PDF selected"
+                IsReadOnly="True"/>
 
-                </Grid>
+            <Button
+                x:Name="BrowsePdfButton"
+                Grid.Column="1"
+                Content="Browse..."
+                Click="BrowsePdf_Click"/>
 
-                <ProgressBar
-                    x:Name="UploadProgressBar"
-                    Minimum="0"
-                    Maximum="100"
-                    Value="0"/>
+        </Grid>
 
-            </StackPanel>
+        <!-- Progress -->
 
-            <!-- Buttons -->
+        <StackPanel
+            x:Name="UploadProgressPanel"
+            Spacing="4"
+            Margin="0,14,0,0"
+            IsVisible="False">
 
-            <StackPanel
-                Orientation="Horizontal"
-                HorizontalAlignment="Right"
-                Spacing="6"
-                Margin="0,18,0,0">
+            <Grid
+                ColumnDefinitions="*,Auto">
 
-                <Button
-                    x:Name="CancelButton"
-                    Content="Cancel"
-                    Click="Cancel_Click"/>
+                <TextBlock
+                    x:Name="UploadStatusText"
+                    Text="Uploading..."
+                    FontSize="11"/>
 
-                <Button
-                    x:Name="SaveButton"
-                    Content="Save"
-                    Click="Save_Click"/>
+                <TextBlock
+                    x:Name="UploadProgressText"
+                    Grid.Column="1"
+                    Text="0%"
+                    FontSize="11"/>
 
-            </StackPanel>
+            </Grid>
+
+            <ProgressBar
+                x:Name="UploadProgressBar"
+                Minimum="0"
+                Maximum="100"
+                Value="0"/>
 
         </StackPanel>
 
-    </ScrollViewer>
+        <!-- Buttons -->
+
+        <StackPanel
+            Orientation="Horizontal"
+            HorizontalAlignment="Right"
+            Spacing="6"
+            Margin="0,18,0,0">
+
+            <Button
+                x:Name="CancelButton"
+                Content="Cancel"
+                Click="Cancel_Click"/>
+
+            <Button
+                x:Name="SaveButton"
+                Content="Save"
+                Click="Save_Click"/>
+
+        </StackPanel>
+
+    </StackPanel>
+
+</ScrollViewer>
+
 
 </Window>
