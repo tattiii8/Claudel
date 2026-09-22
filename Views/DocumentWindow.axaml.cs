@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -110,9 +110,19 @@ public partial class DocumentWindow : Window
                 "Not linked";
         }
 
+        /*
+         * The button always means:
+         *
+         * no Issue  -> create
+         * has Issue -> update
+         */
         CreateIssueButton.IsEnabled =
-            !issueExists;
+            true;
 
+        /*
+         * Manual linking is only available
+         * when no Issue is currently linked.
+         */
         LinkIssueButton.IsEnabled =
             !issueExists;
 
@@ -241,7 +251,7 @@ public partial class DocumentWindow : Window
                 await ShowErrorAsync(
                     "設定されているKavita Libraryが見つかりません。\n\n" +
                     $"Configured Library ID: {_settings.Kavita.LibraryId}");
-                
+
                 return;
             }
 
@@ -443,7 +453,6 @@ public partial class DocumentWindow : Window
                         0,
                         20,
                         10),
-
             };
 
         if (series.Count > 0)
@@ -764,41 +773,23 @@ public partial class DocumentWindow : Window
     }
 
     /*
-     * Create Redmine Issue.
+     * Sync document to Redmine.
+     *
+     * No linked Issue:
+     *     Create Issue.
+     *
+     * Linked Issue:
+     *     Update Issue.
      */
     private async void CreateIssue_Click(
         object? sender,
         RoutedEventArgs e)
     {
-        if (HasLinkedIssue())
-        {
-            await ShowErrorAsync(
-                "このDocumentには既にRedmine Issueが紐付いています.");
-
-            return;
-        }
-
         if (string.IsNullOrWhiteSpace(
                 _document.Title))
         {
             await ShowErrorAsync(
                 "タイトルが設定されていません。");
-
-            return;
-        }
-
-        var authorText =
-            string.Join(
-                ", ",
-                _document.Authors
-                    .OrderBy(x => x.Order)
-                    .Select(x => x.Name));
-
-        if (string.IsNullOrWhiteSpace(
-                authorText))
-        {
-            await ShowErrorAsync(
-                "著者が設定されていません。");
 
             return;
         }
@@ -811,10 +802,12 @@ public partial class DocumentWindow : Window
                 new RedmineService(
                     _settings.Redmine);
 
+            var wasLinked =
+                HasLinkedIssue();
+
             var result =
-                await redmineService.CreateIssueAsync(
-                    _document.Title,
-                    authorText);
+                await redmineService.SyncIssueAsync(
+                    _document);
 
             _document.RedmineIssueId =
                 result.Id;
@@ -829,7 +822,7 @@ public partial class DocumentWindow : Window
             if (!saved)
             {
                 await ShowErrorAsync(
-                    "Redmine Issueは作成されましたが、" +
+                    "Redmineへの同期は完了しましたが、" +
                     "Documentへの保存に失敗しました。\n\n" +
                     $"Issue: {result.Url}");
 
@@ -838,18 +831,30 @@ public partial class DocumentWindow : Window
 
             UpdateRedmineDisplay();
 
-            await ShowMessageAsync(
-                "Redmine Issueを作成しました。\n\n" +
-                $"Issue #{result.Id}\n" +
-                result.Url);
+            if (wasLinked)
+            {
+                await ShowMessageAsync(
+                    $"Redmine Issue #{result.Id} を更新しました。\n\n" +
+                    result.Url);
+            }
+            else
+            {
+                await ShowMessageAsync(
+                    $"Redmine Issue #{result.Id} を作成しました。\n\n" +
+                    result.Url);
+            }
         }
         catch (Exception ex)
         {
             UpdateRedmineDisplay();
 
             await ShowErrorAsync(
-                $"Redmine Issueの作成に失敗しました。\n\n" +
+                $"Redmineへの同期に失敗しました。\n\n" +
                 ex.Message);
+        }
+        finally
+        {
+            SetRedmineButtonsEnabled(true);
         }
     }
 
@@ -944,6 +949,10 @@ public partial class DocumentWindow : Window
             await ShowErrorAsync(
                 $"Issueの紐付けに失敗しました。\n\n" +
                 ex.Message);
+        }
+        finally
+        {
+            SetRedmineButtonsEnabled(true);
         }
     }
 
@@ -1042,6 +1051,10 @@ public partial class DocumentWindow : Window
                 $"Issueの紐付け解除に失敗しました。\n\n" +
                 ex.Message);
         }
+        finally
+        {
+            SetRedmineButtonsEnabled(true);
+        }
     }
 
     /*
@@ -1137,7 +1150,7 @@ public partial class DocumentWindow : Window
         var issueIdTextBox =
             new TextBox
             {
-                Watermark =
+                PlaceholderText =
                     "例: 123",
 
                 Margin =
