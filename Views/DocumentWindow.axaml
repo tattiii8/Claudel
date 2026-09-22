@@ -3,10 +3,10 @@
         x:Class="Claudel.DocumentWindow"
         Title="Document"
         FontFamily="Segoe UI"
-        Width="620"
-        Height="470"
-        MinWidth="520"
-        MinHeight="400"
+        Width="680"
+        Height="540"
+        MinWidth="560"
+        MinHeight="440"
         WindowStartupLocation="CenterOwner">
 
     <Window.Styles>
@@ -170,10 +170,6 @@
                         Spacing="6">
 
                         <Button
-                            Content="Open PDF"
-                            Click="OpenPdf_Click"/>
-
-                        <Button
                             Content="Edit"
                             Classes="secondary"
                             Click="Edit_Click"/>
@@ -288,8 +284,6 @@
 
                     </Grid>
 
-                    <!-- Empty space -->
-
                     <Border
                         Grid.Row="2"/>
 
@@ -324,6 +318,138 @@
                             Classes="secondary"
                             Content="Unlink"
                             Click="UnlinkIssue_Click"/>
+
+                    </StackPanel>
+
+                </Grid>
+
+            </TabItem>
+
+            <!-- Kavita -->
+
+            <TabItem Header="Kavita">
+
+                <Grid
+                    Margin="8,18,8,8"
+                    RowDefinitions="Auto,Auto,*,Auto"
+                    RowSpacing="16">
+
+                    <!-- Kavita header -->
+
+                    <StackPanel
+                        Grid.Row="0"
+                        Orientation="Horizontal"
+                        Spacing="10">
+
+                        <Border
+                            Width="36"
+                            Height="36"
+                            CornerRadius="6"
+                            Background="#6A4FB3">
+
+                            <TextBlock
+                                Text="K"
+                                FontSize="20"
+                                FontWeight="Bold"
+                                Foreground="White"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+
+                        </Border>
+
+                        <StackPanel
+                            VerticalAlignment="Center"
+                            Spacing="2">
+
+                            <TextBlock
+                                Classes="section"
+                                Text="Kavita"/>
+
+                            <TextBlock
+                                Classes="muted"
+                                Text="Book / Series integration"/>
+
+                        </StackPanel>
+
+                    </StackPanel>
+
+                    <!-- Kavita information -->
+
+                    <Grid
+                        Grid.Row="1"
+                        ColumnDefinitions="110,*"
+                        RowDefinitions="Auto,Auto,Auto,Auto"
+                        RowSpacing="12">
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Classes="label"
+                            Text="Library"/>
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            x:Name="KavitaLibraryTextBlock"
+                            Text="Not linked"/>
+
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Classes="label"
+                            Text="Series"/>
+
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            x:Name="KavitaSeriesTextBlock"
+                            Text="Not linked"/>
+
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Classes="label"
+                            Text="Volume"/>
+
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            x:Name="KavitaVolumeTextBlock"
+                            Text="Not linked"/>
+
+                        <TextBlock
+                            Grid.Row="3"
+                            Grid.Column="0"
+                            Classes="label"
+                            Text="URL"/>
+
+                        <TextBlock
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            x:Name="KavitaUrlTextBlock"
+                            Text="Not linked"
+                            TextWrapping="Wrap"/>
+
+                    </Grid>
+
+                    <!-- Empty space -->
+
+                    <Border
+                        Grid.Row="2"/>
+
+                    <!-- Kavita actions -->
+
+                    <StackPanel
+                        Grid.Row="3"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="8">
+
+                        <Button
+                            x:Name="OpenKavitaButton"
+                            Classes="primary"
+                            Content="Kavitaで読む"
+                            Click="OpenKavita_Click"/>
 
                     </StackPanel>
 

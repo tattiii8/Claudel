@@ -14,8 +14,6 @@ public partial class DocumentWindow : Window
 {
     private readonly DocumentRepository _repository;
 
-    private readonly S3Service _s3Service;
-
     private readonly AppSettings _settings;
 
     private Document _document;
@@ -35,9 +33,6 @@ public partial class DocumentWindow : Window
 
         _repository =
             repository;
-
-        _s3Service =
-            new S3Service(settings);
 
         UpdateDisplay();
     }
@@ -78,8 +73,13 @@ public partial class DocumentWindow : Window
             ?? "";
 
         UpdateRedmineDisplay();
+
+        UpdateKavitaDisplay();
     }
 
+    /*
+     * Redmine
+     */
     private void UpdateRedmineDisplay()
     {
         RedmineProjectTextBlock.Text =
@@ -120,6 +120,76 @@ public partial class DocumentWindow : Window
             issueExists;
     }
 
+    /*
+     * Kavita
+     */
+    private void UpdateKavitaDisplay()
+    {
+        var libraryLinked =
+            _document.KavitaLibraryId.HasValue &&
+            _document.KavitaLibraryId.Value > 0;
+
+        var seriesLinked =
+            _document.KavitaSeriesId.HasValue &&
+            _document.KavitaSeriesId.Value > 0;
+
+        var volumeLinked =
+            _document.KavitaVolumeId.HasValue &&
+            _document.KavitaVolumeId.Value > 0;
+
+        if (libraryLinked)
+        {
+            KavitaLibraryTextBlock.Text =
+                _document.KavitaLibraryId!.Value.ToString();
+        }
+        else
+        {
+            KavitaLibraryTextBlock.Text =
+                "Not linked";
+        }
+
+        if (seriesLinked)
+        {
+            KavitaSeriesTextBlock.Text =
+                _document.KavitaSeriesId!.Value.ToString();
+        }
+        else
+        {
+            KavitaSeriesTextBlock.Text =
+                "Not linked";
+        }
+
+        if (volumeLinked)
+        {
+            KavitaVolumeTextBlock.Text =
+                _document.KavitaVolumeId!.Value.ToString();
+        }
+        else
+        {
+            KavitaVolumeTextBlock.Text =
+                "Not linked";
+        }
+
+        if (!string.IsNullOrWhiteSpace(
+                _document.KavitaUrl))
+        {
+            KavitaUrlTextBlock.Text =
+                _document.KavitaUrl;
+        }
+        else
+        {
+            KavitaUrlTextBlock.Text =
+                "Not linked";
+        }
+
+        OpenKavitaButton.IsEnabled =
+            !string.IsNullOrWhiteSpace(
+                _document.KavitaUrl);
+    }
+
+    /*
+     * Create Redmine Issue.
+     */
     private async void CreateIssue_Click(
         object? sender,
         RoutedEventArgs e)
@@ -207,6 +277,9 @@ public partial class DocumentWindow : Window
         }
     }
 
+    /*
+     * Link existing Redmine Issue.
+     */
     private async void LinkIssue_Click(
         object? sender,
         RoutedEventArgs e)
@@ -256,7 +329,7 @@ public partial class DocumentWindow : Window
                 _settings.Redmine.TrackerId)
             {
                 await ShowErrorAsync(
-                    "このIssueはLecture Trackerではありません。\n\n" +
+                    "このIssueは現在設定されているTrackerとは異なります。\n\n" +
                     $"Tracker ID: {issue.TrackerId}\n" +
                     $"Expected: {_settings.Redmine.TrackerId}");
 
@@ -298,6 +371,9 @@ public partial class DocumentWindow : Window
         }
     }
 
+    /*
+     * Open Redmine Issue.
+     */
     private async void OpenRedmine_Click(
         object? sender,
         RoutedEventArgs e)
@@ -334,6 +410,9 @@ public partial class DocumentWindow : Window
         }
     }
 
+    /*
+     * Unlink Redmine Issue.
+     */
     private async void UnlinkIssue_Click(
         object? sender,
         RoutedEventArgs e)
@@ -385,6 +464,45 @@ public partial class DocumentWindow : Window
 
             await ShowErrorAsync(
                 $"Issueの紐付け解除に失敗しました。\n\n" +
+                ex.Message);
+        }
+    }
+
+    /*
+     * Open Kavita.
+     */
+    private async void OpenKavita_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(
+                _document.KavitaUrl))
+        {
+            await ShowErrorAsync(
+                "このDocumentにはKavitaが紐付いていません。");
+
+            return;
+        }
+
+        try
+        {
+            var processStartInfo =
+                new ProcessStartInfo
+                {
+                    FileName =
+                        _document.KavitaUrl,
+
+                    UseShellExecute =
+                        true
+                };
+
+            Process.Start(
+                processStartInfo);
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorAsync(
+                $"Kavitaを開けませんでした。\n\n" +
                 ex.Message);
         }
     }
@@ -701,79 +819,9 @@ public partial class DocumentWindow : Window
         return result;
     }
 
-    private async Task
-        ShowDialogMessageAsync(
-            Window owner,
-            string message)
-    {
-        var dialog =
-            new Window
-            {
-                Title =
-                    "Information",
-
-                Width =
-                    420,
-
-                Height =
-                    180,
-
-                Content =
-                    new TextBlock
-                    {
-                        Text =
-                            message,
-
-                        TextWrapping =
-                            Avalonia.Media.TextWrapping.Wrap,
-
-                        Margin =
-                            new Avalonia.Thickness(20)
-                    }
-            };
-
-        await dialog.ShowDialog(owner);
-    }
-
-    private async void OpenPdf_Click(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (string.IsNullOrWhiteSpace(
-                _document.S3Key))
-        {
-            await ShowErrorAsync(
-                "このDocumentにはPDFが登録されていません。");
-
-            return;
-        }
-
-        try
-        {
-            var filePath =
-                await _s3Service.DownloadPdfAsync(
-                    _document.S3Key);
-
-            var processStartInfo =
-                new ProcessStartInfo
-                {
-                    FileName =
-                        filePath,
-
-                    UseShellExecute =
-                        true
-                };
-
-            Process.Start(
-                processStartInfo);
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync(
-                $"PDFを開けませんでした。\n\n{ex.Message}");
-        }
-    }
-
+    /*
+     * Edit document.
+     */
     private async void Edit_Click(
         object? sender,
         RoutedEventArgs e)
@@ -815,6 +863,13 @@ public partial class DocumentWindow : Window
         }
     }
 
+    /*
+     * Delete document.
+     *
+     * PDF/S3 document deletion has intentionally
+     * been removed because Claudel no longer
+     * manages PDF files.
+     */
     private async void Delete_Click(
         object? sender,
         RoutedEventArgs e)
@@ -829,13 +884,6 @@ public partial class DocumentWindow : Window
 
         try
         {
-            if (!string.IsNullOrWhiteSpace(
-                    _document.S3Key))
-            {
-                await _s3Service.DeleteAsync(
-                    _document.S3Key);
-            }
-
             var deleted =
                 await _repository.DeleteAsync(
                     _document.Id);
@@ -885,7 +933,8 @@ public partial class DocumentWindow : Window
             {
                 Text =
                     $"「{_document.Title}」を削除しますか？\n\n" +
-                    "PDFもS3から削除されます。この操作は元に戻せません。",
+                    "Claudelの書誌データと関連付けを削除します。\n" +
+                    "RedmineやKavita側のデータは削除されません。",
 
                 TextWrapping =
                     Avalonia.Media.TextWrapping.Wrap,
@@ -984,7 +1033,8 @@ public partial class DocumentWindow : Window
     }
 
     private async Task
-        ShowMessageAsync(
+        ShowDialogMessageAsync(
+            Window owner,
             string message)
     {
         var dialog =
@@ -994,10 +1044,10 @@ public partial class DocumentWindow : Window
                     "Information",
 
                 Width =
-                    500,
+                    420,
 
                 Height =
-                    220,
+                    180,
 
                 Content =
                     new TextBlock
@@ -1013,7 +1063,16 @@ public partial class DocumentWindow : Window
                     }
             };
 
-        await dialog.ShowDialog(this);
+        await dialog.ShowDialog(owner);
+    }
+
+    private async Task
+        ShowMessageAsync(
+            string message)
+    {
+        await ShowDialogMessageAsync(
+            this,
+            message);
     }
 
     private async Task
