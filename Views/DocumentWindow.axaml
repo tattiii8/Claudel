@@ -298,7 +298,7 @@
                         <Button
                             x:Name="CreateIssueButton"
                             Classes="primary"
-                            Content="Redmineへ同期"
+                            Content="Sync Redmine"
                             Click="CreateIssue_Click"/>
 
                         <Button
@@ -448,7 +448,7 @@
                         <Button
                             x:Name="LinkKavitaButton"
                             Classes="secondary"
-                            Content="Kavitaへ同期"
+                            Content="Sync Kavita"
                             Click="LinkKavita_Click"/>
 
                         <Button
