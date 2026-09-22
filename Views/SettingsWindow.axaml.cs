@@ -20,14 +20,19 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
 
-        _settingsService = settingsService;
-        Settings = settings;
+        _settingsService =
+            settingsService;
+
+        Settings =
+            settings;
 
         LoadSettings();
     }
 
     private void LoadSettings()
     {
+        // MySQL
+
         MySqlHostTextBox.Text =
             Settings.MySql.Host;
 
@@ -43,6 +48,9 @@ public partial class SettingsWindow : Window
         MySqlPasswordTextBox.Text =
             Settings.MySql.Password;
 
+
+        // S3
+
         S3AccessKeyIdTextBox.Text =
             Settings.S3.AccessKeyId;
 
@@ -55,6 +63,9 @@ public partial class SettingsWindow : Window
         S3BucketTextBox.Text =
             Settings.S3.Bucket;
 
+
+        // Redmine
+
         RedmineUrlTextBox.Text =
             Settings.Redmine.Url;
 
@@ -66,72 +77,133 @@ public partial class SettingsWindow : Window
 
         RedmineTrackerIdTextBox.Text =
             Settings.Redmine.TrackerId.ToString();
+
+
+        // Kavita
+
+        KavitaUrlTextBox.Text =
+            Settings.Kavita.Url;
+
+        KavitaApiKeyTextBox.Text =
+            Settings.Kavita.ApiKey;
+
+        KavitaLibraryIdTextBox.Text =
+            Settings.Kavita.LibraryId.ToString();
     }
 
     private AppSettings ReadSettings()
     {
-        var port = 3306;
+        var mysqlPort =
+            3306;
 
         if (int.TryParse(
                 MySqlPortTextBox.Text,
-                out var parsedPort))
+                out var parsedMysqlPort))
         {
-            port = parsedPort;
+            mysqlPort =
+                parsedMysqlPort;
+        }
+
+        var redmineTrackerId =
+            5;
+
+        if (int.TryParse(
+                RedmineTrackerIdTextBox.Text,
+                out var parsedTrackerId))
+        {
+            redmineTrackerId =
+                parsedTrackerId;
+        }
+
+        var kavitaLibraryId =
+            0;
+
+        if (int.TryParse(
+                KavitaLibraryIdTextBox.Text,
+                out var parsedLibraryId))
+        {
+            kavitaLibraryId =
+                parsedLibraryId;
         }
 
         return new AppSettings
         {
-            MySql = new MySqlSettings
-            {
-                Host =
-                    MySqlHostTextBox.Text?.Trim() ?? "",
+            MySql =
+                new MySqlSettings
+                {
+                    Host =
+                        MySqlHostTextBox.Text?.Trim()
+                        ?? "",
 
-                Port =
-                    port,
+                    Port =
+                        mysqlPort,
 
-                Database =
-                    MySqlDatabaseTextBox.Text?.Trim() ?? "",
+                    Database =
+                        MySqlDatabaseTextBox.Text?.Trim()
+                        ?? "",
 
-                User =
-                    MySqlUserTextBox.Text?.Trim() ?? "",
+                    User =
+                        MySqlUserTextBox.Text?.Trim()
+                        ?? "",
 
-                Password =
-                    MySqlPasswordTextBox.Text ?? ""
-            },
+                    Password =
+                        MySqlPasswordTextBox.Text
+                        ?? ""
+                },
 
-            S3 = new S3Settings
-            {
-                AccessKeyId =
-                    S3AccessKeyIdTextBox.Text?.Trim() ?? "",
+            S3 =
+                new S3Settings
+                {
+                    AccessKeyId =
+                        S3AccessKeyIdTextBox.Text?.Trim()
+                        ?? "",
 
-                SecretAccessKey =
-                    S3SecretAccessKeyTextBox.Text ?? "",
+                    SecretAccessKey =
+                        S3SecretAccessKeyTextBox.Text
+                        ?? "",
 
-                Region =
-                    S3RegionTextBox.Text?.Trim() ?? "",
+                    Region =
+                        S3RegionTextBox.Text?.Trim()
+                        ?? "",
 
-                Bucket =
-                    S3BucketTextBox.Text?.Trim() ?? ""
-            },
+                    Bucket =
+                        S3BucketTextBox.Text?.Trim()
+                        ?? ""
+                },
 
-            Redmine = new RedmineSettings
-            {
-                Url =
-                    RedmineUrlTextBox.Text?.Trim() ?? "",
+            Redmine =
+                new RedmineSettings
+                {
+                    Url =
+                        RedmineUrlTextBox.Text?.Trim()
+                        ?? "",
 
-                ApiKey =
-                    RedmineApiKeyTextBox.Text ?? "",
+                    ApiKey =
+                        RedmineApiKeyTextBox.Text
+                        ?? "",
 
-                ProjectId =
-                    RedmineProjectIdTextBox.Text?.Trim() ?? "",
+                    ProjectId =
+                        RedmineProjectIdTextBox.Text?.Trim()
+                        ?? "",
 
-                TrackerId =
-                    int.TryParse(
-                        RedmineTrackerIdTextBox.Text,
-                        out var trackerId)
-                        ? trackerId
-                        : 5
-            }
+                    TrackerId =
+                        redmineTrackerId
+                },
+
+            Kavita =
+                new KavitaSettings
+                {
+                    Url =
+                        KavitaUrlTextBox.Text?.Trim()
+                        ?? "",
+
+                    ApiKey =
+                        KavitaApiKeyTextBox.Text
+                        ?? "",
+
+                    LibraryId =
+                        kavitaLibraryId
+                }
         };
     }
 
@@ -141,9 +213,11 @@ public partial class SettingsWindow : Window
     {
         try
         {
-            var settings = ReadSettings();
+            var settings =
+                ReadSettings();
 
-            if (string.IsNullOrWhiteSpace(settings.MySql.Host))
+            if (string.IsNullOrWhiteSpace(
+                    settings.MySql.Host))
             {
                 await ShowMessageAsync(
                     "MySQL Host is required.");
@@ -151,7 +225,8 @@ public partial class SettingsWindow : Window
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(settings.MySql.Database))
+            if (string.IsNullOrWhiteSpace(
+                    settings.MySql.Database))
             {
                 await ShowMessageAsync(
                     "MySQL Database is required.");
@@ -159,7 +234,8 @@ public partial class SettingsWindow : Window
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(settings.MySql.User))
+            if (string.IsNullOrWhiteSpace(
+                    settings.MySql.User))
             {
                 await ShowMessageAsync(
                     "MySQL User is required.");
@@ -167,11 +243,22 @@ public partial class SettingsWindow : Window
                 return;
             }
 
+            if (settings.MySql.Port <= 0 ||
+                settings.MySql.Port > 65535)
+            {
+                await ShowMessageAsync(
+                    "MySQL Port is invalid.");
+
+                return;
+            }
+
             var connectionString =
-                BuildConnectionString(settings);
+                BuildConnectionString(
+                    settings);
 
             var database =
-                new Database(connectionString);
+                new Database(
+                    connectionString);
 
             await using var connection =
                 await database.OpenConnectionAsync();
@@ -182,7 +269,8 @@ public partial class SettingsWindow : Window
         catch (Exception ex)
         {
             await ShowMessageAsync(
-                $"MySQL connection failed.\n\n{ex.Message}");
+                $"MySQL connection failed.\n\n" +
+                ex.Message);
         }
     }
 
@@ -192,7 +280,8 @@ public partial class SettingsWindow : Window
     {
         try
         {
-            var settings = ReadSettings();
+            var settings =
+                ReadSettings();
 
             if (string.IsNullOrWhiteSpace(
                     settings.Redmine.Url))
@@ -229,7 +318,8 @@ public partial class SettingsWindow : Window
                 return;
             }
 
-            TestRedmineButton.IsEnabled = false;
+            TestRedmineButton.IsEnabled =
+                false;
 
             var service =
                 new RedmineService(
@@ -243,11 +333,65 @@ public partial class SettingsWindow : Window
         catch (Exception ex)
         {
             await ShowMessageAsync(
-                $"Redmine connection failed.\n\n{ex.Message}");
+                $"Redmine connection failed.\n\n" +
+                ex.Message);
         }
         finally
         {
-            TestRedmineButton.IsEnabled = true;
+            TestRedmineButton.IsEnabled =
+                true;
+        }
+    }
+
+    private async void TestKavita_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        try
+        {
+            var settings =
+                ReadSettings();
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.Kavita.Url))
+            {
+                await ShowMessageAsync(
+                    "Kavita URL is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.Kavita.ApiKey))
+            {
+                await ShowMessageAsync(
+                    "Kavita API Key is required.");
+
+                return;
+            }
+
+            TestKavitaButton.IsEnabled =
+                false;
+
+            var service =
+                new KavitaService(
+                    settings.Kavita);
+
+            await service.TestConnectionAsync();
+
+            await ShowMessageAsync(
+                "Kavita connection succeeded.");
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageAsync(
+                $"Kavita connection failed.\n\n" +
+                ex.Message);
+        }
+        finally
+        {
+            TestKavitaButton.IsEnabled =
+                true;
         }
     }
 
@@ -257,7 +401,10 @@ public partial class SettingsWindow : Window
     {
         try
         {
-            var settings = ReadSettings();
+            var settings =
+                ReadSettings();
+
+            // MySQL validation
 
             if (string.IsNullOrWhiteSpace(
                     settings.MySql.Host))
@@ -295,6 +442,9 @@ public partial class SettingsWindow : Window
                 return;
             }
 
+
+            // S3 validation
+
             if (string.IsNullOrWhiteSpace(
                     settings.S3.AccessKeyId))
             {
@@ -331,17 +481,89 @@ public partial class SettingsWindow : Window
                 return;
             }
 
+
+            // Redmine validation
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.Redmine.Url))
+            {
+                await ShowMessageAsync(
+                    "Redmine URL is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.Redmine.ApiKey))
+            {
+                await ShowMessageAsync(
+                    "Redmine API Access Key is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.Redmine.ProjectId))
+            {
+                await ShowMessageAsync(
+                    "Redmine Project ID is required.");
+
+                return;
+            }
+
+            if (settings.Redmine.TrackerId <= 0)
+            {
+                await ShowMessageAsync(
+                    "Redmine Tracker ID is invalid.");
+
+                return;
+            }
+
+
+            // Kavita validation
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.Kavita.Url))
+            {
+                await ShowMessageAsync(
+                    "Kavita URL is required.");
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(
+                    settings.Kavita.ApiKey))
+            {
+                await ShowMessageAsync(
+                    "Kavita API Key is required.");
+
+                return;
+            }
+
+            if (settings.Kavita.LibraryId <= 0)
+            {
+                await ShowMessageAsync(
+                    "Kavita Library ID is invalid.");
+
+                return;
+            }
+
+
+            // Save
+
             await _settingsService.SaveAsync(
                 settings);
 
-            Settings = settings;
+            Settings =
+                settings;
 
             Close(true);
         }
         catch (Exception ex)
         {
             await ShowMessageAsync(
-                $"Failed to save settings.\n\n{ex.Message}");
+                $"Failed to save settings.\n\n" +
+                ex.Message);
         }
     }
 
@@ -366,21 +588,31 @@ public partial class SettingsWindow : Window
     private async Task ShowMessageAsync(
         string message)
     {
-        var dialog = new Window
-        {
-            Title = "Settings",
-            Width = 500,
-            Height = 220,
-
-            Content = new TextBlock
+        var dialog =
+            new Window
             {
-                Text = message,
-                TextWrapping =
-                    Avalonia.Media.TextWrapping.Wrap,
-                Margin =
-                    new Avalonia.Thickness(20)
-            }
-        };
+                Title =
+                    "Settings",
+
+                Width =
+                    500,
+
+                Height =
+                    220,
+
+                Content =
+                    new TextBlock
+                    {
+                        Text =
+                            message,
+
+                        TextWrapping =
+                            Avalonia.Media.TextWrapping.Wrap,
+
+                        Margin =
+                            new Avalonia.Thickness(20)
+                    }
+            };
 
         await dialog.ShowDialog(this);
     }

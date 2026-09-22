@@ -4,9 +4,9 @@
         FontFamily="Segoe UI"
         Title="Settings"
         Width="560"
-        Height="600"
+        Height="680"
         MinWidth="500"
-        MinHeight="550"
+        MinHeight="600"
         WindowStartupLocation="CenterOwner">
 
     <Window.Styles>
@@ -233,6 +233,69 @@
                             HorizontalAlignment="Left"
                             Margin="0,12,0,0"
                             Click="TestRedmine_Click"/>
+
+                    </StackPanel>
+
+                </ScrollViewer>
+
+            </TabItem>
+
+            <!-- Kavita -->
+
+            <TabItem Header="Kavita">
+
+                <ScrollViewer>
+
+                    <StackPanel
+                        Margin="16,20,16,20"
+                        Spacing="8">
+
+                        <TextBlock
+                            Classes="section"
+                            Text="Kavita"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="URL"/>
+
+                        <TextBox
+                            x:Name="KavitaUrlTextBox"
+                            PlaceholderText="https://kavita.example.com"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="API Key"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="KavitaApiKeyTextBox"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Library ID"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="KavitaLibraryIdTextBox"
+                            PlaceholderText="1"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Library IDについて"
+                            Margin="0,12,0,0"/>
+
+                        <TextBlock
+                            Text="Kavitaで書籍を管理しているLibraryのIDを指定します。"
+                            TextWrapping="Wrap"
+                            Opacity="0.65"
+                            FontSize="12"/>
+
+                        <Button
+                            x:Name="TestKavitaButton"
+                            Content="Test Kavita"
+                            HorizontalAlignment="Left"
+                            Margin="0,12,0,0"
+                            Click="TestKavita_Click"/>
 
                     </StackPanel>
 

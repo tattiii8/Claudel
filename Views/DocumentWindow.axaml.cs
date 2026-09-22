@@ -2,8 +2,11 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Claudel.Models;
 using Claudel.Repositories;
 using Claudel.Services;
@@ -185,6 +188,579 @@ public partial class DocumentWindow : Window
         OpenKavitaButton.IsEnabled =
             !string.IsNullOrWhiteSpace(
                 _document.KavitaUrl);
+
+        LinkKavitaButton.Content =
+            volumeLinked
+                ? "Kavitaを再リンク"
+                : "Kavitaへ同期";
+
+        LinkKavitaButton.IsEnabled =
+            true;
+    }
+
+    /*
+     * Link document to Kavita.
+     *
+     * Claudel does not upload or move PDF files.
+     *
+     * The existing Kavita Library / Series / Volume
+     * is selected and only its IDs and URL are stored
+     * in Claudel.
+     */
+    private async void LinkKavita_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        try
+        {
+            SetKavitaButtonsEnabled(false);
+
+            var kavitaService =
+                new KavitaService(
+                    _settings.Kavita);
+
+            var libraries =
+                await kavitaService.GetLibrariesAsync();
+
+            if (libraries.Count == 0)
+            {
+                await ShowErrorAsync(
+                    "KavitaにLibraryがありません。");
+
+                return;
+            }
+
+            var configuredLibrary =
+                libraries.FirstOrDefault(
+                    x =>
+                        x.Id ==
+                        _settings.Kavita.LibraryId);
+
+            if (configuredLibrary == null)
+            {
+                await ShowErrorAsync(
+                    "設定されているKavita Libraryが見つかりません。\n\n" +
+                    $"Configured Library ID: {_settings.Kavita.LibraryId}");
+                
+                return;
+            }
+
+            var series =
+                await kavitaService.SearchSeriesAsync(
+                    _document.Title);
+
+            if (series.Count == 0)
+            {
+                await ShowErrorAsync(
+                    "KavitaでこのDocumentに一致するSeriesが見つかりませんでした。\n\n" +
+                    $"Title: {_document.Title}");
+
+                return;
+            }
+
+            var selectedSeries =
+                await ShowKavitaSeriesDialogAsync(
+                    series);
+
+            if (selectedSeries == null)
+            {
+                return;
+            }
+
+            var volumes =
+                await kavitaService.GetVolumesAsync(
+                    selectedSeries.Id);
+
+            if (volumes.Count == 0)
+            {
+                await ShowErrorAsync(
+                    "選択したSeriesにVolumeがありません。\n\n" +
+                    $"Series: {selectedSeries.Name}");
+
+                return;
+            }
+
+            var selectedVolume =
+                await ShowKavitaVolumeDialogAsync(
+                    volumes);
+
+            if (selectedVolume == null)
+            {
+                return;
+            }
+
+            var kavitaUrl =
+                kavitaService.BuildVolumeUrl(
+                    configuredLibrary.Id,
+                    selectedSeries.Id,
+                    selectedVolume.Id);
+
+            _document.KavitaLibraryId =
+                configuredLibrary.Id;
+
+            _document.KavitaSeriesId =
+                selectedSeries.Id;
+
+            _document.KavitaVolumeId =
+                selectedVolume.Id;
+
+            _document.KavitaUrl =
+                kavitaUrl;
+
+            var saved =
+                await _repository.UpdateAsync(
+                    _document);
+
+            if (!saved)
+            {
+                await ShowErrorAsync(
+                    "Kavitaとの紐付け情報を保存できませんでした。");
+
+                return;
+            }
+
+            UpdateKavitaDisplay();
+
+            await ShowMessageAsync(
+                "Kavitaとの紐付けが完了しました。\n\n" +
+                $"Library: {configuredLibrary.Name} (ID: {configuredLibrary.Id})\n" +
+                $"Series: {selectedSeries.Name} (ID: {selectedSeries.Id})\n" +
+                $"Volume: {selectedVolume} (ID: {selectedVolume.Id})");
+        }
+        catch (Exception ex)
+        {
+            UpdateKavitaDisplay();
+
+            await ShowErrorAsync(
+                $"Kavitaとの紐付けに失敗しました。\n\n" +
+                ex.Message);
+        }
+        finally
+        {
+            SetKavitaButtonsEnabled(true);
+        }
+    }
+
+    private void SetKavitaButtonsEnabled(
+        bool enabled)
+    {
+        LinkKavitaButton.IsEnabled =
+            enabled;
+
+        if (enabled)
+        {
+            UpdateKavitaDisplay();
+        }
+        else
+        {
+            OpenKavitaButton.IsEnabled =
+                false;
+        }
+    }
+
+    private async Task<KavitaSeries?>
+        ShowKavitaSeriesDialogAsync(
+            System.Collections.Generic.List<KavitaSeries> series)
+    {
+        KavitaSeries? result =
+            null;
+
+        var dialog =
+            new Window
+            {
+                Title =
+                    "Kavita Seriesを選択",
+
+                Width =
+                    560,
+
+                Height =
+                    440,
+
+                MinWidth =
+                    480,
+
+                MinHeight =
+                    360,
+
+                WindowStartupLocation =
+                    WindowStartupLocation.CenterOwner
+            };
+
+        var header =
+            new StackPanel
+            {
+                Spacing =
+                    6,
+
+                Margin =
+                    new Thickness(
+                        20,
+                        20,
+                        20,
+                        10),
+
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text =
+                            "Kavita Series",
+
+                        FontSize =
+                            16,
+
+                        FontWeight =
+                            FontWeight.SemiBold
+                    },
+
+                    new TextBlock
+                    {
+                        Text =
+                            $"「{_document.Title}」に一致するSeriesを選択してください。",
+
+                        FontSize =
+                            12,
+
+                        Opacity =
+                            0.65,
+
+                        TextWrapping =
+                            TextWrapping.Wrap
+                    }
+                }
+            };
+
+        var listBox =
+            new ListBox
+            {
+                ItemsSource =
+                    series,
+
+                Margin =
+                    new Thickness(
+                        20,
+                        0,
+                        20,
+                        10),
+
+            };
+
+        if (series.Count > 0)
+        {
+            listBox.SelectedIndex =
+                0;
+        }
+
+        var cancelButton =
+            new Button
+            {
+                Content =
+                    "Cancel",
+
+                Padding =
+                    new Thickness(
+                        14,
+                        7)
+            };
+
+        var selectButton =
+            new Button
+            {
+                Content =
+                    "Select",
+
+                Padding =
+                    new Thickness(
+                        14,
+                        7)
+            };
+
+        cancelButton.Click +=
+            (_, _) =>
+            {
+                dialog.Close();
+            };
+
+        selectButton.Click +=
+            async (_, _) =>
+            {
+                if (listBox.SelectedItem
+                    is not KavitaSeries selected)
+                {
+                    await ShowDialogMessageAsync(
+                        dialog,
+                        "Seriesを選択してください。");
+
+                    return;
+                }
+
+                result =
+                    selected;
+
+                dialog.Close();
+            };
+
+        var buttons =
+            new StackPanel
+            {
+                Orientation =
+                    Orientation.Horizontal,
+
+                HorizontalAlignment =
+                    HorizontalAlignment.Right,
+
+                Spacing =
+                    8,
+
+                Margin =
+                    new Thickness(
+                        20,
+                        0,
+                        20,
+                        20),
+
+                Children =
+                {
+                    cancelButton,
+                    selectButton
+                }
+            };
+
+        var grid =
+            new Grid
+            {
+                RowDefinitions =
+                    new RowDefinitions(
+                        "Auto,*,Auto")
+            };
+
+        grid.Children.Add(
+            header);
+
+        grid.Children.Add(
+            listBox);
+
+        grid.Children.Add(
+            buttons);
+
+        Grid.SetRow(
+            listBox,
+            1);
+
+        Grid.SetRow(
+            buttons,
+            2);
+
+        dialog.Content =
+            grid;
+
+        await dialog.ShowDialog(
+            this);
+
+        return result;
+    }
+
+    private async Task<KavitaVolume?>
+        ShowKavitaVolumeDialogAsync(
+            System.Collections.Generic.List<KavitaVolume> volumes)
+    {
+        KavitaVolume? result =
+            null;
+
+        var dialog =
+            new Window
+            {
+                Title =
+                    "Kavita Volumeを選択",
+
+                Width =
+                    560,
+
+                Height =
+                    440,
+
+                MinWidth =
+                    480,
+
+                MinHeight =
+                    360,
+
+                WindowStartupLocation =
+                    WindowStartupLocation.CenterOwner
+            };
+
+        var header =
+            new StackPanel
+            {
+                Spacing =
+                    6,
+
+                Margin =
+                    new Thickness(
+                        20,
+                        20,
+                        20,
+                        10),
+
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text =
+                            "Kavita Volume",
+
+                        FontSize =
+                            16,
+
+                        FontWeight =
+                            FontWeight.SemiBold
+                    },
+
+                    new TextBlock
+                    {
+                        Text =
+                            "このDocumentに対応するVolumeを選択してください。",
+
+                        FontSize =
+                            12,
+
+                        Opacity =
+                            0.65,
+
+                        TextWrapping =
+                            TextWrapping.Wrap
+                    }
+                }
+            };
+
+        var listBox =
+            new ListBox
+            {
+                ItemsSource =
+                    volumes,
+
+                Margin =
+                    new Thickness(
+                        20,
+                        0,
+                        20,
+                        10),
+            };
+
+        if (volumes.Count > 0)
+        {
+            listBox.SelectedIndex =
+                0;
+        }
+
+        var cancelButton =
+            new Button
+            {
+                Content =
+                    "Cancel",
+
+                Padding =
+                    new Thickness(
+                        14,
+                        7)
+            };
+
+        var selectButton =
+            new Button
+            {
+                Content =
+                    "Select",
+
+                Padding =
+                    new Thickness(
+                        14,
+                        7)
+            };
+
+        cancelButton.Click +=
+            (_, _) =>
+            {
+                dialog.Close();
+            };
+
+        selectButton.Click +=
+            async (_, _) =>
+            {
+                if (listBox.SelectedItem
+                    is not KavitaVolume selected)
+                {
+                    await ShowDialogMessageAsync(
+                        dialog,
+                        "Volumeを選択してください。");
+
+                    return;
+                }
+
+                result =
+                    selected;
+
+                dialog.Close();
+            };
+
+        var buttons =
+            new StackPanel
+            {
+                Orientation =
+                    Orientation.Horizontal,
+
+                HorizontalAlignment =
+                    HorizontalAlignment.Right,
+
+                Spacing =
+                    8,
+
+                Margin =
+                    new Thickness(
+                        20,
+                        0,
+                        20,
+                        20),
+
+                Children =
+                {
+                    cancelButton,
+                    selectButton
+                }
+            };
+
+        var grid =
+            new Grid
+            {
+                RowDefinitions =
+                    new RowDefinitions(
+                        "Auto,*,Auto")
+            };
+
+        grid.Children.Add(
+            header);
+
+        grid.Children.Add(
+            listBox);
+
+        grid.Children.Add(
+            buttons);
+
+        Grid.SetRow(
+            listBox,
+            1);
+
+        Grid.SetRow(
+            buttons,
+            2);
+
+        dialog.Content =
+            grid;
+
+        await dialog.ShowDialog(
+            this);
+
+        return result;
     }
 
     /*
@@ -565,7 +1141,7 @@ public partial class DocumentWindow : Window
                     "例: 123",
 
                 Margin =
-                    new Avalonia.Thickness(
+                    new Thickness(
                         20,
                         0)
             };
@@ -580,7 +1156,7 @@ public partial class DocumentWindow : Window
                     "Cancel",
 
                 Padding =
-                    new Avalonia.Thickness(
+                    new Thickness(
                         14,
                         7)
             };
@@ -592,7 +1168,7 @@ public partial class DocumentWindow : Window
                     "Link Issue",
 
                 Padding =
-                    new Avalonia.Thickness(
+                    new Thickness(
                         14,
                         7)
             };
@@ -628,10 +1204,10 @@ public partial class DocumentWindow : Window
             new StackPanel
             {
                 Orientation =
-                    Avalonia.Layout.Orientation.Horizontal,
+                    Orientation.Horizontal,
 
                 HorizontalAlignment =
-                    Avalonia.Layout.HorizontalAlignment.Right,
+                    HorizontalAlignment.Right,
 
                 Spacing =
                     8,
@@ -660,10 +1236,10 @@ public partial class DocumentWindow : Window
                             13,
 
                         FontWeight =
-                            Avalonia.Media.FontWeight.SemiBold,
+                            FontWeight.SemiBold,
 
                         Margin =
-                            new Avalonia.Thickness(
+                            new Thickness(
                                 20,
                                 20,
                                 20,
@@ -682,7 +1258,7 @@ public partial class DocumentWindow : Window
                             0.6,
 
                         Margin =
-                            new Avalonia.Thickness(
+                            new Thickness(
                                 20,
                                 0)
                     },
@@ -696,7 +1272,8 @@ public partial class DocumentWindow : Window
         dialog.Content =
             layout;
 
-        await dialog.ShowDialog(this);
+        await dialog.ShowDialog(
+            this);
 
         return result;
     }
@@ -731,10 +1308,10 @@ public partial class DocumentWindow : Window
                     "Redmine側のIssueは削除されません。",
 
                 TextWrapping =
-                    Avalonia.Media.TextWrapping.Wrap,
+                    TextWrapping.Wrap,
 
                 Margin =
-                    new Avalonia.Thickness(20)
+                    new Thickness(20)
             };
 
         var cancelButton =
@@ -744,7 +1321,7 @@ public partial class DocumentWindow : Window
                     "Cancel",
 
                 Padding =
-                    new Avalonia.Thickness(
+                    new Thickness(
                         14,
                         7)
             };
@@ -756,7 +1333,7 @@ public partial class DocumentWindow : Window
                     "Unlink",
 
                 Padding =
-                    new Avalonia.Thickness(
+                    new Thickness(
                         14,
                         7)
             };
@@ -783,10 +1360,10 @@ public partial class DocumentWindow : Window
             new StackPanel
             {
                 Orientation =
-                    Avalonia.Layout.Orientation.Horizontal,
+                    Orientation.Horizontal,
 
                 HorizontalAlignment =
-                    Avalonia.Layout.HorizontalAlignment.Right,
+                    HorizontalAlignment.Right,
 
                 Spacing =
                     10,
@@ -814,7 +1391,8 @@ public partial class DocumentWindow : Window
         dialog.Content =
             layout;
 
-        await dialog.ShowDialog(this);
+        await dialog.ShowDialog(
+            this);
 
         return result;
     }
@@ -834,7 +1412,8 @@ public partial class DocumentWindow : Window
                     _repository,
                     _settings);
 
-            await editWindow.ShowDialog(this);
+            await editWindow.ShowDialog(
+                this);
 
             var updatedDocument =
                 await _repository.GetByIdAsync(
@@ -937,10 +1516,10 @@ public partial class DocumentWindow : Window
                     "RedmineやKavita側のデータは削除されません。",
 
                 TextWrapping =
-                    Avalonia.Media.TextWrapping.Wrap,
+                    TextWrapping.Wrap,
 
                 Margin =
-                    new Avalonia.Thickness(20)
+                    new Thickness(20)
             };
 
         var cancelButton =
@@ -950,7 +1529,7 @@ public partial class DocumentWindow : Window
                     "Cancel",
 
                 Padding =
-                    new Avalonia.Thickness(
+                    new Thickness(
                         14,
                         7)
             };
@@ -962,7 +1541,7 @@ public partial class DocumentWindow : Window
                     "Delete",
 
                 Padding =
-                    new Avalonia.Thickness(
+                    new Thickness(
                         14,
                         7)
             };
@@ -989,10 +1568,10 @@ public partial class DocumentWindow : Window
             new StackPanel
             {
                 Orientation =
-                    Avalonia.Layout.Orientation.Horizontal,
+                    Orientation.Horizontal,
 
                 HorizontalAlignment =
-                    Avalonia.Layout.HorizontalAlignment.Right,
+                    HorizontalAlignment.Right,
 
                 Spacing =
                     10,
@@ -1020,7 +1599,8 @@ public partial class DocumentWindow : Window
         dialog.Content =
             layout;
 
-        await dialog.ShowDialog(this);
+        await dialog.ShowDialog(
+            this);
 
         return result;
     }
@@ -1056,14 +1636,15 @@ public partial class DocumentWindow : Window
                             message,
 
                         TextWrapping =
-                            Avalonia.Media.TextWrapping.Wrap,
+                            TextWrapping.Wrap,
 
                         Margin =
-                            new Avalonia.Thickness(20)
+                            new Thickness(20)
                     }
             };
 
-        await dialog.ShowDialog(owner);
+        await dialog.ShowDialog(
+            owner);
     }
 
     private async Task

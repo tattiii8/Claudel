@@ -446,6 +446,12 @@
                         Spacing="8">
 
                         <Button
+                            x:Name="LinkKavitaButton"
+                            Classes="secondary"
+                            Content="Kavitaへ同期"
+                            Click="LinkKavita_Click"/>
+
+                        <Button
                             x:Name="OpenKavitaButton"
                             Classes="primary"
                             Content="Kavitaで読む"
