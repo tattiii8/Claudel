@@ -9,6 +9,8 @@ public class AppSettings
     public S3Settings S3 { get; set; } = new();
 
     public RedmineSettings Redmine { get; set; } = new();
+
+    public EntraIdSettings EntraId { get; set; } = new();
 }
 
 public class MySqlSettings
@@ -44,4 +46,11 @@ public class RedmineSettings
     public string ProjectId { get; set; } = "";
 
     public int TrackerId { get; set; } = 5;
+}
+
+public class EntraIdSettings
+{
+    public string TenantId { get; set; } = "";
+
+    public string ClientId { get; set; } = "";
 }

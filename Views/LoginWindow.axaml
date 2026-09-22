@@ -1,0 +1,111 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Claudel.LoginWindow"
+        FontFamily="Segoe UI"
+        Title="Claudel - Sign in"
+        Width="520"
+        Height="420"
+        MinWidth="480"
+        MinHeight="380"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Opacity" Value="0.65"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="MinHeight" Value="32"/>
+            <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto"
+          Margin="32">
+
+        <StackPanel Grid.Row="0"
+                    Spacing="6">
+
+            <TextBlock
+                Classes="section"
+                Text="Claudel"/>
+
+            <TextBlock
+                Text="Microsoft Entra IDでサインイン"/>
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="1"
+                    Spacing="8"
+                    Margin="0,28,0,0">
+
+            <TextBlock
+                Classes="label"
+                Text="Tenant ID"/>
+
+            <TextBox
+                x:Name="TenantIdTextBox"
+                PlaceholderText="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+
+            <TextBlock
+                Classes="label"
+                Text="Client ID"
+                Margin="0,10,0,0"/>
+
+            <TextBox
+                x:Name="ClientIdTextBox"
+                PlaceholderText="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+
+            <TextBlock
+                Text="初回ログイン時にMicrosoftのブラウザ画面が開きます。"
+                Opacity="0.65"
+                TextWrapping="Wrap"
+                Margin="0,10,0,0"/>
+
+            <TextBlock
+                x:Name="StatusTextBlock"
+                TextWrapping="Wrap"
+                Margin="0,4,0,0"/>
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="10">
+
+            <Button
+                Content="終了"
+                Click="Cancel_Click"/>
+
+            <Button
+                x:Name="SignInButton"
+                Content="Microsoft Entra IDでログイン"
+                Click="SignIn_Click"/>
+
+        </StackPanel>
+
+    </Grid>
+
+</Window>

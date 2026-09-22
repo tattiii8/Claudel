@@ -63,9 +63,9 @@
             Grid.Row="1"
             Margin="24,0,24,0">
 
-            <!-- MySQL -->
+            <!-- Cloud Database -->
 
-            <TabItem Header="MySQL">
+            <TabItem Header="Cloud Database">
 
                 <ScrollViewer>
 
@@ -75,7 +75,7 @@
 
                         <TextBlock
                             Classes="section"
-                            Text="MySQL Database"/>
+                            Text="Cloud Database"/>
 
                         <TextBlock
                             Classes="label"
