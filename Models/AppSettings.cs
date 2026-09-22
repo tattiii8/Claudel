@@ -12,6 +12,8 @@ public class AppSettings
 
     public KavitaSettings Kavita { get; set; } = new();
 
+    public KavitaSftpSettings KavitaSftp { get; set; } = new();
+
     public EntraIdSettings EntraId { get; set; } = new();
 }
 
@@ -59,6 +61,20 @@ public class KavitaSettings
     public string ApiKey { get; set; } = "";
 
     public int LibraryId { get; set; }
+}
+
+public class KavitaSftpSettings
+{
+    public string Host { get; set; } = "";
+
+    public int Port { get; set; } = 22;
+
+    public string User { get; set; } = "";
+
+    public string PrivateKeyPath { get; set; } = "";
+
+    public string RemotePath { get; set; } =
+        "/opt/kavita/data/documents";
 }
 
 public class EntraIdSettings

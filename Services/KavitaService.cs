@@ -104,20 +104,6 @@ public class KavitaService
             $"{BaseUrl}/api/Series/v2" +
             $"?libraryId={_settings.LibraryId}";
 
-        /*
-         * Kavitaの実際のAPIレスポンスを確認済み。
-         *
-         * POST /api/Series/v2?libraryId=1
-         *
-         * {
-         *   "statements": [],
-         *   "limitTo": 0,
-         *   "sortOptions": null
-         * }
-         *
-         * このAPIはLibrary内のSeries一覧を返すため、
-         * タイトルによる候補抽出はClaudel側で行う。
-         */
         var requestBody =
             new
             {
@@ -175,18 +161,6 @@ public class KavitaService
                 continue;
             }
 
-            /*
-             * 現在は完全一致を優先し、
-             * 完全一致しない場合は部分一致も候補にする。
-             *
-             * Documentのタイトル:
-             *   考えながら学ぶキリスト教
-             *
-             * Kavita:
-             *   考えながら学ぶキリスト教
-             *
-             * のようなケースを直接取得できる。
-             */
             if (string.Equals(
                     name.Trim(),
                     title.Trim(),
@@ -331,16 +305,21 @@ public class KavitaService
                 nameof(volumeId));
         }
 
-        /*
-         * KavitaのWeb UI URL。
-         *
-         * 例:
-         * http://localhost:5000/library/1/series/1/volume/1
-         */
         return
             $"{BaseUrl}/library/{libraryId}" +
             $"/series/{seriesId}" +
             $"/volume/{volumeId}";
+    }
+
+    public async Task ScanAllAsync()
+    {
+        using var response =
+            await _httpClient.PostAsync(
+                $"{BaseUrl}/api/Library/scan-all",
+                null);
+
+        await EnsureSuccessAsync(
+            response);
     }
 
     private static string

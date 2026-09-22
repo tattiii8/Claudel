@@ -65,8 +65,6 @@
         RowDefinitions="Auto,Auto,*,Auto"
         RowSpacing="16">
 
-        <!-- Header -->
-
         <StackPanel
             Grid.Row="0"
             Spacing="4">
@@ -85,17 +83,11 @@
 
         </StackPanel>
 
-        <!-- Header separator -->
-
         <Separator
             Grid.Row="1"/>
 
-        <!-- Main tabs -->
-
         <TabControl
             Grid.Row="2">
-
-            <!-- General -->
 
             <TabItem Header="General">
 
@@ -103,8 +95,6 @@
                     Margin="8,18,8,8"
                     RowDefinitions="*,Auto"
                     RowSpacing="18">
-
-                    <!-- Metadata -->
 
                     <Grid
                         Grid.Row="0"
@@ -161,8 +151,6 @@
 
                     </Grid>
 
-                    <!-- General actions -->
-
                     <StackPanel
                         Grid.Row="1"
                         Orientation="Horizontal"
@@ -190,16 +178,12 @@
 
             </TabItem>
 
-            <!-- Redmine -->
-
             <TabItem Header="Redmine">
 
                 <Grid
                     Margin="8,18,8,8"
                     RowDefinitions="Auto,Auto,*,Auto"
                     RowSpacing="16">
-
-                    <!-- Redmine header -->
 
                     <StackPanel
                         Grid.Row="0"
@@ -237,8 +221,6 @@
                         </StackPanel>
 
                     </StackPanel>
-
-                    <!-- Redmine information -->
 
                     <Grid
                         Grid.Row="1"
@@ -287,8 +269,6 @@
                     <Border
                         Grid.Row="2"/>
 
-                    <!-- Redmine actions -->
-
                     <StackPanel
                         Grid.Row="3"
                         Orientation="Horizontal"
@@ -325,16 +305,12 @@
 
             </TabItem>
 
-            <!-- Kavita -->
-
             <TabItem Header="Kavita">
 
                 <Grid
                     Margin="8,18,8,8"
                     RowDefinitions="Auto,Auto,*,Auto"
                     RowSpacing="16">
-
-                    <!-- Kavita header -->
 
                     <StackPanel
                         Grid.Row="0"
@@ -372,8 +348,6 @@
                         </StackPanel>
 
                     </StackPanel>
-
-                    <!-- Kavita information -->
 
                     <Grid
                         Grid.Row="1"
@@ -432,12 +406,8 @@
 
                     </Grid>
 
-                    <!-- Empty space -->
-
                     <Border
                         Grid.Row="2"/>
-
-                    <!-- Kavita actions -->
 
                     <StackPanel
                         Grid.Row="3"
@@ -448,8 +418,14 @@
                         <Button
                             x:Name="LinkKavitaButton"
                             Classes="secondary"
-                            Content="Sync Kavita"
+                            Content="Kavitaへ同期"
                             Click="LinkKavita_Click"/>
+
+                        <Button
+                            x:Name="UploadPdfButton"
+                            Classes="secondary"
+                            Content="PDFをKavitaへアップロード"
+                            Click="UploadPdf_Click"/>
 
                         <Button
                             x:Name="OpenKavitaButton"
@@ -464,8 +440,6 @@
             </TabItem>
 
         </TabControl>
-
-        <!-- Bottom spacer -->
 
         <Border
             Grid.Row="3"

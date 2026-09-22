@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -7,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Claudel.Models;
 using Claudel.Repositories;
 using Claudel.Services;
@@ -110,19 +112,9 @@ public partial class DocumentWindow : Window
                 "Not linked";
         }
 
-        /*
-         * The button always means:
-         *
-         * no Issue  -> create
-         * has Issue -> update
-         */
         CreateIssueButton.IsEnabled =
             true;
 
-        /*
-         * Manual linking is only available
-         * when no Issue is currently linked.
-         */
         LinkIssueButton.IsEnabled =
             !issueExists;
 
@@ -206,16 +198,19 @@ public partial class DocumentWindow : Window
 
         LinkKavitaButton.IsEnabled =
             true;
+
+        UploadPdfButton.IsEnabled =
+            true;
     }
 
     /*
      * Link document to Kavita.
      *
-     * Claudel does not upload or move PDF files.
+     * This operation only links the existing
+     * Kavita Series / Volume to the Document.
      *
-     * The existing Kavita Library / Series / Volume
-     * is selected and only its IDs and URL are stored
-     * in Claudel.
+     * PDF upload is handled separately by
+     * UploadPdf_Click.
      */
     private async void LinkKavita_Click(
         object? sender,
@@ -351,10 +346,511 @@ public partial class DocumentWindow : Window
         }
     }
 
+    /*
+     * Upload a PDF to the Kavita server.
+     *
+     * Flow:
+     *
+     * 1. Select local PDF.
+     * 2. Show confirmation.
+     * 3. Upload through SFTP.
+     * 4. Show real-time progress.
+     * 5. Trigger Kavita scan.
+     */
+    private async void UploadPdf_Click(
+        object? sender,
+        RoutedEventArgs e)
+    {
+        try
+        {
+            var files =
+                await StorageProvider.OpenFilePickerAsync(
+                    new FilePickerOpenOptions
+                    {
+                        Title =
+                            "KavitaへアップロードするPDFを選択",
+
+                        AllowMultiple =
+                            false,
+
+                        FileTypeFilter =
+                            new[]
+                            {
+                                new FilePickerFileType(
+                                    "PDF files")
+                                {
+                                    Patterns =
+                                        new[]
+                                        {
+                                            "*.pdf"
+                                        }
+                                }
+                            }
+                    });
+
+            if (files.Count == 0)
+            {
+                return;
+            }
+
+            var file =
+                files[0];
+
+            var localFilePath =
+                file.TryGetLocalPath();
+
+            if (string.IsNullOrWhiteSpace(
+                    localFilePath))
+            {
+                await ShowErrorAsync(
+                    "選択したファイルのローカルパスを取得できませんでした。");
+
+                return;
+            }
+
+            if (!string.Equals(
+                    Path.GetExtension(localFilePath),
+                    ".pdf",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                await ShowErrorAsync(
+                    "PDFファイルを選択してください。");
+
+                return;
+            }
+
+            var fileInfo =
+                new FileInfo(
+                    localFilePath);
+
+            var confirmed =
+                await ShowPdfUploadConfirmationAsync(
+                    localFilePath,
+                    fileInfo.Length);
+
+            if (!confirmed)
+            {
+                return;
+            }
+
+            SetKavitaButtonsEnabled(false);
+
+            await ShowPdfUploadProgressAsync(
+                localFilePath);
+        }
+        catch (Exception ex)
+        {
+            UpdateKavitaDisplay();
+
+            await ShowErrorAsync(
+                $"PDFのアップロードに失敗しました。\n\n" +
+                ex.Message);
+        }
+        finally
+        {
+            SetKavitaButtonsEnabled(true);
+        }
+    }
+
+    private async Task
+        ShowPdfUploadProgressAsync(
+            string localFilePath)
+    {
+        var fileInfo =
+            new FileInfo(
+                localFilePath);
+
+        var totalBytes =
+            fileInfo.Length;
+
+        var progressBar =
+            new ProgressBar
+            {
+                Minimum =
+                    0,
+
+                Maximum =
+                    100,
+
+                Value =
+                    0,
+
+                Height =
+                    18,
+
+                HorizontalAlignment =
+                    HorizontalAlignment.Stretch
+            };
+
+        var progressTextBlock =
+            new TextBlock
+            {
+                Text =
+                    "0%",
+
+                FontSize =
+                    16,
+
+                FontWeight =
+                    FontWeight.SemiBold,
+
+                HorizontalAlignment =
+                    HorizontalAlignment.Center
+            };
+
+        var progressDetailTextBlock =
+            new TextBlock
+            {
+                Text =
+                    $"0 B / {FormatBytes(totalBytes)}",
+
+                FontSize =
+                    12,
+
+                Opacity =
+                    0.65,
+
+                HorizontalAlignment =
+                    HorizontalAlignment.Center
+            };
+
+        var statusTextBlock =
+            new TextBlock
+            {
+                Text =
+                    "アップロード中...",
+
+                FontSize =
+                    12,
+
+                HorizontalAlignment =
+                    HorizontalAlignment.Center
+            };
+
+        var dialog =
+            new Window
+            {
+                Title =
+                    "PDFをKavitaへアップロード",
+
+                Width =
+                    560,
+
+                Height =
+                    260,
+
+                MinWidth =
+                    500,
+
+                MinHeight =
+                    220,
+
+                CanResize =
+                    false,
+
+                WindowStartupLocation =
+                    WindowStartupLocation.CenterOwner
+            };
+
+        var fileNameTextBlock =
+            new TextBlock
+            {
+                Text =
+                    Path.GetFileName(
+                        localFilePath),
+
+                FontSize =
+                    13,
+
+                FontWeight =
+                    FontWeight.SemiBold,
+
+                TextWrapping =
+                    TextWrapping.Wrap,
+
+                HorizontalAlignment =
+                    HorizontalAlignment.Center
+            };
+
+        var layout =
+            new StackPanel
+            {
+                Spacing =
+                    14,
+
+                Margin =
+                    new Thickness(24),
+
+                VerticalAlignment =
+                    VerticalAlignment.Center,
+
+                Children =
+                {
+                    fileNameTextBlock,
+
+                    progressTextBlock,
+
+                    progressBar,
+
+                    progressDetailTextBlock,
+
+                    statusTextBlock
+                }
+            };
+
+        dialog.Content =
+            layout;
+
+        var progress =
+            new Progress<ulong>(
+                uploadedBytes =>
+                {
+                    var percentage =
+                        totalBytes <= 0
+                            ? 0
+                            : uploadedBytes * 100.0 /
+                              totalBytes;
+
+                    if (percentage > 100)
+                    {
+                        percentage =
+                            100;
+                    }
+
+                    progressBar.Value =
+                        percentage;
+
+                    progressTextBlock.Text =
+                        $"{percentage:0}%";
+
+                   progressDetailTextBlock.Text =
+    $"{FormatBytes((long)uploadedBytes)} / " +
+    $"{FormatBytes(totalBytes)}";
+                });
+
+        var uploadTask =
+            UploadPdfAndScanAsync(
+                localFilePath,
+                progress,
+                statusTextBlock);
+
+        dialog.Opened +=
+            async (_, _) =>
+            {
+                try
+                {
+                    await uploadTask;
+
+                    progressBar.Value =
+                        100;
+
+                    progressTextBlock.Text =
+                        "100%";
+
+                    progressDetailTextBlock.Text =
+                        $"{FormatBytes(totalBytes)} / " +
+                        $"{FormatBytes(totalBytes)}";
+
+                    statusTextBlock.Text =
+                        "Kavitaへの登録が完了しました。";
+
+                    await Task.Delay(
+                        500);
+
+                    dialog.Close(
+                        true);
+                }
+                catch (Exception ex)
+                {
+                    dialog.Close(
+                        false);
+
+                    await ShowErrorAsync(
+                        "PDFのアップロードに失敗しました。\n\n" +
+                        ex.Message);
+                }
+            };
+
+        await dialog.ShowDialog(
+            this);
+    }
+
+    private async Task
+        UploadPdfAndScanAsync(
+            string localFilePath,
+            IProgress<ulong> progress,
+            TextBlock statusTextBlock)
+    {
+        var sftpService =
+            new KavitaSftpService(
+                _settings.KavitaSftp);
+
+await sftpService.UploadPdfAsync(
+    localFilePath,
+    _document.Title,
+    progress);
+
+        statusTextBlock.Text =
+            "アップロード完了。Kavitaをスキャンしています...";
+
+        var kavitaService =
+            new KavitaService(
+                _settings.Kavita);
+
+        await kavitaService.ScanAllAsync();
+
+        statusTextBlock.Text =
+            "Kavitaのスキャンが完了しました。";
+    }
+
+    private async Task<bool>
+        ShowPdfUploadConfirmationAsync(
+            string localFilePath,
+            long fileSize)
+    {
+        var result =
+            false;
+
+        var dialog =
+            new Window
+            {
+                Title =
+                    "PDFをKavitaへアップロード",
+
+                Width =
+                    500,
+
+                Height =
+                    280,
+
+                MinWidth =
+                    440,
+
+                MinHeight =
+                    240,
+
+                WindowStartupLocation =
+                    WindowStartupLocation.CenterOwner
+            };
+
+        var message =
+            new TextBlock
+            {
+                Text =
+                    $"次のPDFをKavitaへアップロードしますか？\n\n" +
+                    $"{Path.GetFileName(localFilePath)}\n" +
+                    $"{FormatBytes(fileSize)}\n\n" +
+                    "アップロード後、KavitaのLibrary Scanを実行します。",
+
+                TextWrapping =
+                    TextWrapping.Wrap,
+
+                Margin =
+                    new Thickness(20)
+            };
+
+        var cancelButton =
+            new Button
+            {
+                Content =
+                    "Cancel",
+
+                Padding =
+                    new Thickness(
+                        14,
+                        7)
+            };
+
+        var uploadButton =
+            new Button
+            {
+                Content =
+                    "アップロード",
+
+                Padding =
+                    new Thickness(
+                        14,
+                        7)
+            };
+
+        cancelButton.Click +=
+            (_, _) =>
+            {
+                result =
+                    false;
+
+                dialog.Close();
+            };
+
+        uploadButton.Click +=
+            (_, _) =>
+            {
+                result =
+                    true;
+
+                dialog.Close();
+            };
+
+        var buttons =
+            new StackPanel
+            {
+                Orientation =
+                    Orientation.Horizontal,
+
+                HorizontalAlignment =
+                    HorizontalAlignment.Right,
+
+                Spacing =
+                    10,
+
+                Margin =
+                    new Thickness(
+                        20,
+                        0,
+                        20,
+                        20),
+
+                Children =
+                {
+                    cancelButton,
+                    uploadButton
+                }
+            };
+
+        var layout =
+            new Grid
+            {
+                RowDefinitions =
+                    new RowDefinitions(
+                        "*,Auto")
+            };
+
+        layout.Children.Add(
+            message);
+
+        layout.Children.Add(
+            buttons);
+
+        Grid.SetRow(
+            buttons,
+            1);
+
+        dialog.Content =
+            layout;
+
+        await dialog.ShowDialog(
+            this);
+
+        return result;
+    }
+
     private void SetKavitaButtonsEnabled(
         bool enabled)
     {
         LinkKavitaButton.IsEnabled =
+            enabled;
+
+        UploadPdfButton.IsEnabled =
             enabled;
 
         if (enabled)
@@ -366,6 +862,31 @@ public partial class DocumentWindow : Window
             OpenKavitaButton.IsEnabled =
                 false;
         }
+    }
+
+    private static string FormatBytes(
+        long bytes)
+    {
+        if (bytes < 1024)
+        {
+            return
+                $"{bytes} B";
+        }
+
+        if (bytes < 1024 * 1024)
+        {
+            return
+                $"{bytes / 1024.0:0.0} KB";
+        }
+
+        if (bytes < 1024L * 1024L * 1024L)
+        {
+            return
+                $"{bytes / (1024.0 * 1024.0):0.0} MB";
+        }
+
+        return
+            $"{bytes / (1024.0 * 1024.0 * 1024.0):0.0} GB";
     }
 
     private async Task<KavitaSeries?>

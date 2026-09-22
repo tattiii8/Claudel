@@ -4,9 +4,9 @@
         FontFamily="Segoe UI"
         Title="Settings"
         Width="560"
-        Height="680"
+        Height="760"
         MinWidth="500"
-        MinHeight="600"
+        MinHeight="650"
         WindowStartupLocation="CenterOwner">
 
     <Window.Styles>
@@ -48,8 +48,6 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
 
-        <!-- Header -->
-
         <TextBlock
             Grid.Row="0"
             Text="Settings"
@@ -57,13 +55,9 @@
             FontWeight="SemiBold"
             Margin="24,20,24,16"/>
 
-        <!-- Tabs -->
-
         <TabControl
             Grid.Row="1"
             Margin="24,0,24,0">
-
-            <!-- Cloud Database -->
 
             <TabItem Header="Cloud Database">
 
@@ -126,8 +120,6 @@
 
             </TabItem>
 
-            <!-- AWS S3 -->
-
             <TabItem Header="AWS S3">
 
                 <ScrollViewer>
@@ -178,8 +170,6 @@
                 </ScrollViewer>
 
             </TabItem>
-
-            <!-- Redmine -->
 
             <TabItem Header="Redmine">
 
@@ -240,8 +230,6 @@
 
             </TabItem>
 
-            <!-- Kavita -->
-
             <TabItem Header="Kavita">
 
                 <ScrollViewer>
@@ -280,9 +268,66 @@
                             PlaceholderText="1"/>
 
                         <TextBlock
+                            Classes="section"
+                            Text="SFTP"
+                            Margin="0,18,0,4"/>
+
+                        <TextBlock
                             Classes="label"
+                            Text="Host"/>
+
+                        <TextBox
+                            x:Name="KavitaSftpHostTextBox"
+                            PlaceholderText="OCI VM hostname or IP"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Port"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="KavitaSftpPortTextBox"
+                            PlaceholderText="22"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="User"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="KavitaSftpUserTextBox"
+                            PlaceholderText="ubuntu"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Private Key Path"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="KavitaSftpPrivateKeyPathTextBox"
+                            PlaceholderText="C:\Users\...\id_ed25519"/>
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Remote Path"
+                            Margin="0,6,0,0"/>
+
+                        <TextBox
+                            x:Name="KavitaSftpRemotePathTextBox"
+                            PlaceholderText="/opt/kavita/data/documents"/>
+
+                        <TextBlock
+                            Text="SFTP設定はPDFアップロード時のみ使用します。"
+                            TextWrapping="Wrap"
+                            Opacity="0.65"
+                            FontSize="12"
+                            Margin="0,8,0,0"/>
+
+                        <TextBlock
                             Text="Library IDについて"
-                            Margin="0,12,0,0"/>
+                            FontSize="12"
+                            Opacity="0.65"
+                            Margin="0,8,0,0"/>
 
                         <TextBlock
                             Text="Kavitaで書籍を管理しているLibraryのIDを指定します。"
@@ -304,8 +349,6 @@
             </TabItem>
 
         </TabControl>
-
-        <!-- Buttons -->
 
         <StackPanel
             Grid.Row="2"

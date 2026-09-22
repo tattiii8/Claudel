@@ -31,8 +31,6 @@ public partial class SettingsWindow : Window
 
     private void LoadSettings()
     {
-        // MySQL
-
         MySqlHostTextBox.Text =
             Settings.MySql.Host;
 
@@ -48,9 +46,6 @@ public partial class SettingsWindow : Window
         MySqlPasswordTextBox.Text =
             Settings.MySql.Password;
 
-
-        // S3
-
         S3AccessKeyIdTextBox.Text =
             Settings.S3.AccessKeyId;
 
@@ -62,9 +57,6 @@ public partial class SettingsWindow : Window
 
         S3BucketTextBox.Text =
             Settings.S3.Bucket;
-
-
-        // Redmine
 
         RedmineUrlTextBox.Text =
             Settings.Redmine.Url;
@@ -78,9 +70,6 @@ public partial class SettingsWindow : Window
         RedmineTrackerIdTextBox.Text =
             Settings.Redmine.TrackerId.ToString();
 
-
-        // Kavita
-
         KavitaUrlTextBox.Text =
             Settings.Kavita.Url;
 
@@ -89,6 +78,21 @@ public partial class SettingsWindow : Window
 
         KavitaLibraryIdTextBox.Text =
             Settings.Kavita.LibraryId.ToString();
+
+        KavitaSftpHostTextBox.Text =
+            Settings.KavitaSftp.Host;
+
+        KavitaSftpPortTextBox.Text =
+            Settings.KavitaSftp.Port.ToString();
+
+        KavitaSftpUserTextBox.Text =
+            Settings.KavitaSftp.User;
+
+        KavitaSftpPrivateKeyPathTextBox.Text =
+            Settings.KavitaSftp.PrivateKeyPath;
+
+        KavitaSftpRemotePathTextBox.Text =
+            Settings.KavitaSftp.RemotePath;
     }
 
     private AppSettings ReadSettings()
@@ -124,6 +128,17 @@ public partial class SettingsWindow : Window
         {
             kavitaLibraryId =
                 parsedLibraryId;
+        }
+
+        var kavitaSftpPort =
+            22;
+
+        if (int.TryParse(
+                KavitaSftpPortTextBox.Text,
+                out var parsedSftpPort))
+        {
+            kavitaSftpPort =
+                parsedSftpPort;
         }
 
         return new AppSettings
@@ -203,7 +218,35 @@ public partial class SettingsWindow : Window
 
                     LibraryId =
                         kavitaLibraryId
-                }
+                },
+
+            KavitaSftp =
+                new KavitaSftpSettings
+                {
+                    Host =
+                        KavitaSftpHostTextBox.Text?.Trim()
+                        ?? "",
+
+                    Port =
+                        kavitaSftpPort,
+
+                    User =
+                        KavitaSftpUserTextBox.Text?.Trim()
+                        ?? "",
+
+                    PrivateKeyPath =
+                        KavitaSftpPrivateKeyPathTextBox.Text?.Trim()
+                        ?? "",
+
+                    RemotePath =
+                        string.IsNullOrWhiteSpace(
+                            KavitaSftpRemotePathTextBox.Text)
+                            ? "/opt/kavita/data/documents"
+                            : KavitaSftpRemotePathTextBox.Text.Trim()
+                },
+
+            EntraId =
+                Settings.EntraId
         };
     }
 
@@ -404,8 +447,6 @@ public partial class SettingsWindow : Window
             var settings =
                 ReadSettings();
 
-            // MySQL validation
-
             if (string.IsNullOrWhiteSpace(
                     settings.MySql.Host))
             {
@@ -441,9 +482,6 @@ public partial class SettingsWindow : Window
 
                 return;
             }
-
-
-            // S3 validation
 
             if (string.IsNullOrWhiteSpace(
                     settings.S3.AccessKeyId))
@@ -481,9 +519,6 @@ public partial class SettingsWindow : Window
                 return;
             }
 
-
-            // Redmine validation
-
             if (string.IsNullOrWhiteSpace(
                     settings.Redmine.Url))
             {
@@ -519,9 +554,6 @@ public partial class SettingsWindow : Window
                 return;
             }
 
-
-            // Kavita validation
-
             if (string.IsNullOrWhiteSpace(
                     settings.Kavita.Url))
             {
@@ -548,8 +580,20 @@ public partial class SettingsWindow : Window
                 return;
             }
 
+            /*
+             * Kavita SFTP settings are intentionally optional.
+             *
+             * Document registration and Kavita metadata
+             * linking do not require SFTP configuration.
+             */
+            if (settings.KavitaSftp.Port <= 0 ||
+                settings.KavitaSftp.Port > 65535)
+            {
+                await ShowMessageAsync(
+                    "Kavita SFTP Port is invalid.");
 
-            // Save
+                return;
+            }
 
             await _settingsService.SaveAsync(
                 settings);
@@ -614,6 +658,7 @@ public partial class SettingsWindow : Window
                     }
             };
 
-        await dialog.ShowDialog(this);
+        await dialog.ShowDialog(
+            this);
     }
 }
