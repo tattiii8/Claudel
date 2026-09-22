@@ -10,6 +10,8 @@ public class AppSettings
 
     public RedmineSettings Redmine { get; set; } = new();
 
+    public KavitaSettings Kavita { get; set; } = new();
+
     public EntraIdSettings EntraId { get; set; } = new();
 }
 
@@ -46,6 +48,17 @@ public class RedmineSettings
     public string ProjectId { get; set; } = "";
 
     public int TrackerId { get; set; } = 5;
+
+    public int KavitaUrlCustomFieldId { get; set; }
+}
+
+public class KavitaSettings
+{
+    public string Url { get; set; } = "";
+
+    public string ApiKey { get; set; } = "";
+
+    public int LibraryId { get; set; }
 }
 
 public class EntraIdSettings

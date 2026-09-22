@@ -1,14 +1,14 @@
 <Window xmlns="https://github.com/avaloniaui"
-     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-     xmlns:models="using:Claudel.Models"
-     x:Class="Claudel.DocumentEditWindow"
-     Title="Edit Document"
-     FontFamily="Segoe UI"
-     Width="900"
-     Height="800"
-     MinWidth="760"
-     MinHeight="680"
-     WindowStartupLocation="CenterOwner">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="using:Claudel.Models"
+        x:Class="Claudel.DocumentEditWindow"
+        Title="Edit Document"
+        FontFamily="Segoe UI"
+        Width="900"
+        Height="760"
+        MinWidth="760"
+        MinHeight="640"
+        WindowStartupLocation="CenterOwner">
 
     <Window.Styles>
 
@@ -236,30 +236,6 @@
                     </ListBox>
 
                 </Grid>
-
-            </Grid>
-
-            <!-- PDF -->
-
-            <TextBlock
-                Classes="label"
-                Text="PDF"
-                Margin="0,14,0,0"/>
-
-            <Grid
-                ColumnDefinitions="*,Auto"
-                ColumnSpacing="6">
-
-                <TextBox
-                    x:Name="PdfPathTextBox"
-                    Watermark="No PDF selected"
-                    IsReadOnly="True"/>
-
-                <Button
-                    x:Name="BrowsePdfButton"
-                    Grid.Column="1"
-                    Content="Browse..."
-                    Click="BrowsePdf_Click"/>
 
             </Grid>
 

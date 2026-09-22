@@ -1,14 +1,14 @@
 <Window xmlns="https://github.com/avaloniaui"
-     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-     xmlns:models="using:Claudel.Models"
-     x:Class="Claudel.NewDocumentWindow"
-     FontFamily="Segoe UI"
-     Title="New Document"
-     Width="900"
-     Height="800"
-     MinWidth="760"
-     MinHeight="680"
-     WindowStartupLocation="CenterOwner">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="using:Claudel.Models"
+        x:Class="Claudel.NewDocumentWindow"
+        FontFamily="Segoe UI"
+        Title="New Document"
+        Width="900"
+        Height="720"
+        MinWidth="760"
+        MinHeight="620"
+        WindowStartupLocation="CenterOwner">
 
     <Window.Styles>
 
@@ -42,7 +42,7 @@
     </Window.Styles>
 
     <Grid Margin="16"
-          RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto"
+          RowDefinitions="Auto,Auto,Auto,Auto,*,Auto"
           RowSpacing="10">
 
         <!-- Title -->
@@ -122,7 +122,7 @@
 
         </Grid>
 
-        <!-- Main content -->
+        <!-- Cover -->
         <Grid Grid.Row="5"
               ColumnDefinitions="*,260"
               ColumnSpacing="16">
@@ -131,7 +131,6 @@
             <Grid RowDefinitions="Auto,*"
                   RowSpacing="8">
 
-                <!-- Cover actions -->
                 <Grid ColumnDefinitions="*,Auto,Auto"
                       ColumnSpacing="6">
 
@@ -152,7 +151,6 @@
 
                 </Grid>
 
-                <!-- Search candidates -->
                 <ListBox Grid.Row="1"
                          x:Name="CoverCandidatesListBox"
                          SelectionChanged="CoverCandidatesListBox_SelectionChanged">
@@ -245,28 +243,8 @@
 
         </Grid>
 
-        <!-- PDF -->
-        <Grid Grid.Row="6"
-              ColumnDefinitions="100,*,Auto"
-              ColumnSpacing="8">
-
-            <TextBlock Text="PDF"
-                       VerticalAlignment="Center"/>
-
-            <TextBlock Grid.Column="1"
-                       x:Name="PdfFileTextBlock"
-                       VerticalAlignment="Center"
-                       Text="No file selected"
-                       TextTrimming="CharacterEllipsis"/>
-
-            <Button Grid.Column="2"
-                    Content="Select PDF"
-                    Click="SelectPdf_Click"/>
-
-        </Grid>
-
         <!-- Buttons -->
-        <StackPanel Grid.Row="7"
+        <StackPanel Grid.Row="6"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Spacing="8">

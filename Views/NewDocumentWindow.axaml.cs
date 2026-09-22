@@ -19,12 +19,11 @@ public partial class NewDocumentWindow : Window
     private readonly DocumentRepository _repository;
 
     private readonly OpenLibraryService _openLibraryService;
+
     private readonly S3Service _s3Service;
 
     private readonly ObservableCollection<BookCoverCandidate>
         _coverCandidates = new();
-
-    private string? _selectedPdfPath;
 
     private BookCoverCandidate? _selectedCover;
 
@@ -38,8 +37,11 @@ public partial class NewDocumentWindow : Window
 
         _repository = repository;
 
-        _openLibraryService = new OpenLibraryService();
-        _s3Service = new S3Service(settings);
+        _openLibraryService =
+            new OpenLibraryService();
+
+        _s3Service =
+            new S3Service(settings);
 
         CoverCandidatesListBox.ItemsSource =
             _coverCandidates;
@@ -270,57 +272,6 @@ public partial class NewDocumentWindow : Window
     }
 
     /*
-     * Select PDF
-     */
-    private async void SelectPdf_Click(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        var files =
-            await StorageProvider.OpenFilePickerAsync(
-                new Avalonia.Platform.Storage.FilePickerOpenOptions
-                {
-                    Title = "Select PDF",
-                    AllowMultiple = false
-                });
-
-        if (files.Count == 0)
-        {
-            return;
-        }
-
-        var file = files[0];
-
-        var path =
-            file.Path.LocalPath;
-
-        if (string.IsNullOrWhiteSpace(path) ||
-            !File.Exists(path))
-        {
-            await ShowMessageAsync(
-                "The selected file could not be accessed.");
-
-            return;
-        }
-
-        if (!string.Equals(
-                Path.GetExtension(path),
-                ".pdf",
-                StringComparison.OrdinalIgnoreCase))
-        {
-            await ShowMessageAsync(
-                "Please select a PDF file.");
-
-            return;
-        }
-
-        _selectedPdfPath = path;
-
-        PdfFileTextBlock.Text =
-            Path.GetFileName(path);
-    }
-
-    /*
      * Create document
      */
     private async void Create_Click(
@@ -347,23 +298,7 @@ public partial class NewDocumentWindow : Window
         {
             SetInputEnabled(false);
 
-            string? pdfS3Key = null;
-
             string? coverS3Key = null;
-
-            /*
-             * PDF
-             */
-            if (!string.IsNullOrWhiteSpace(
-                    _selectedPdfPath))
-            {
-                pdfS3Key =
-                    $"pdf/{Guid.NewGuid():N}.pdf";
-
-                await _s3Service.UploadPdfAsync(
-                    _selectedPdfPath,
-                    pdfS3Key);
-            }
 
             /*
              * Cover
@@ -501,9 +436,6 @@ public partial class NewDocumentWindow : Window
                     PublicationDate =
                         publicationDate,
 
-                    S3Key =
-                        pdfS3Key ?? "",
-
                     CoverS3Key =
                         coverS3Key ?? ""
                 };
@@ -619,9 +551,6 @@ public partial class NewDocumentWindow : Window
             enabled;
 
         CoverCandidatesListBox.IsEnabled =
-            enabled;
-
-        PdfFileTextBlock.IsEnabled =
             enabled;
     }
 

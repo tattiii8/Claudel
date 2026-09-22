@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
@@ -19,14 +20,15 @@ namespace Claudel;
 public partial class DocumentEditWindow : Window
 {
     private readonly Document _document;
+
     private readonly DocumentRepository _repository;
+
     private readonly S3Service _s3Service;
+
     private readonly OpenLibraryService _openLibraryService;
 
     private readonly ObservableCollection<BookCoverCandidate>
         _coverCandidates = new();
-
-    private string? _pdfPath;
 
     private BookCoverCandidate? _selectedCover;
 
@@ -41,8 +43,11 @@ public partial class DocumentEditWindow : Window
     {
         InitializeComponent();
 
-        _document = document;
-        _repository = repository;
+        _document =
+            document;
+
+        _repository =
+            repository;
 
         _s3Service =
             new S3Service(settings);
@@ -79,17 +84,15 @@ public partial class DocumentEditWindow : Window
                     CultureInfo.InvariantCulture)
             ?? "";
 
-        PdfPathTextBox.Text =
-            string.IsNullOrWhiteSpace(document.S3Key)
-                ? ""
-                : "Existing PDF";
-
         UploadProgressPanel.IsVisible =
             false;
 
         _ = LoadExistingCoverAsync();
     }
 
+    /*
+     * Load existing cover from S3.
+     */
     private async Task LoadExistingCoverAsync()
     {
         if (string.IsNullOrWhiteSpace(
@@ -98,9 +101,11 @@ public partial class DocumentEditWindow : Window
             return;
         }
 
+        string? tempPath = null;
+
         try
         {
-            var tempPath =
+            tempPath =
                 Path.Combine(
                     Path.GetTempPath(),
                     $"claudel-edit-cover-{Guid.NewGuid():N}");
@@ -114,21 +119,30 @@ public partial class DocumentEditWindow : Window
 
             CoverImage.Source =
                 new Bitmap(stream);
-
-            try
-            {
-                File.Delete(tempPath);
-            }
-            catch
-            {
-            }
         }
         catch
         {
-            CoverImage.Source = null;
+            CoverImage.Source =
+                null;
+        }
+        finally
+        {
+            if (!string.IsNullOrWhiteSpace(tempPath))
+            {
+                try
+                {
+                    File.Delete(tempPath);
+                }
+                catch
+                {
+                }
+            }
         }
     }
 
+    /*
+     * Web cover search.
+     */
     private async void SearchCover_Click(
         object? sender,
         RoutedEventArgs e)
@@ -155,15 +169,22 @@ public partial class DocumentEditWindow : Window
 
         try
         {
-            SearchCoverButton.IsEnabled = false;
-            SearchCoverButton.Content = "Searching...";
+            SearchCoverButton.IsEnabled =
+                false;
+
+            SearchCoverButton.Content =
+                "Searching...";
 
             _coverCandidates.Clear();
 
-            _selectedCover = null;
-            _selectedCoverPath = null;
+            _selectedCover =
+                null;
 
-            CoverCandidatesListBox.SelectedItem = null;
+            _selectedCoverPath =
+                null;
+
+            CoverCandidatesListBox.SelectedItem =
+                null;
 
             var results =
                 await _openLibraryService.SearchAsync(
@@ -188,11 +209,17 @@ public partial class DocumentEditWindow : Window
         }
         finally
         {
-            SearchCoverButton.IsEnabled = true;
-            SearchCoverButton.Content = "Search Web";
+            SearchCoverButton.IsEnabled =
+                true;
+
+            SearchCoverButton.Content =
+                "Search Web";
         }
     }
 
+    /*
+     * Select web cover.
+     */
     private async void CoverCandidatesListBox_SelectionChanged(
         object? sender,
         SelectionChangedEventArgs e)
@@ -235,10 +262,14 @@ public partial class DocumentEditWindow : Window
         }
         catch
         {
-            CoverImage.Source = null;
+            CoverImage.Source =
+                null;
         }
     }
 
+    /*
+     * Select local cover image.
+     */
     private async void UploadCover_Click(
         object? sender,
         RoutedEventArgs e)
@@ -290,7 +321,8 @@ public partial class DocumentEditWindow : Window
             var extension =
                 Path.GetExtension(path);
 
-            if (!IsSupportedImageExtension(extension))
+            if (!IsSupportedImageExtension(
+                    extension))
             {
                 await ShowErrorAsync(
                     "Please select a JPG, JPEG, PNG, or WebP image.");
@@ -344,52 +376,9 @@ public partial class DocumentEditWindow : Window
                    StringComparison.OrdinalIgnoreCase);
     }
 
-    private async void BrowsePdf_Click(
-        object? sender,
-        RoutedEventArgs e)
-    {
-        if (!SaveButton.IsEnabled)
-        {
-            return;
-        }
-
-        var files =
-            await StorageProvider.OpenFilePickerAsync(
-                new FilePickerOpenOptions
-                {
-                    Title =
-                        "Select PDF",
-
-                    AllowMultiple =
-                        false,
-
-                    FileTypeFilter =
-                    [
-                        new FilePickerFileType("PDF")
-                        {
-                            Patterns =
-                            [
-                                "*.pdf"
-                            ]
-                        }
-                    ]
-                });
-
-        if (files.Count == 0)
-        {
-            return;
-        }
-
-        var file =
-            files[0];
-
-        _pdfPath =
-            file.Path.LocalPath;
-
-        PdfPathTextBox.Text =
-            _pdfPath;
-    }
-
+    /*
+     * Save document.
+     */
     private async void Save_Click(
         object? sender,
         RoutedEventArgs e)
@@ -407,7 +396,8 @@ public partial class DocumentEditWindow : Window
                 return;
             }
 
-            DateTime? publicationDate = null;
+            DateTime? publicationDate =
+                null;
 
             var publicationDateText =
                 PublicationDateTextBox.Text?.Trim() ?? "";
@@ -432,41 +422,27 @@ public partial class DocumentEditWindow : Window
                     parsedDate.Date;
             }
 
-            if (!string.IsNullOrWhiteSpace(
-                    _pdfPath))
-            {
-                if (!File.Exists(_pdfPath))
-                {
-                    await ShowErrorAsync(
-                        "PDF file was not found.");
-
-                    return;
-                }
-
-                if (!string.Equals(
-                        Path.GetExtension(_pdfPath),
-                        ".pdf",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    await ShowErrorAsync(
-                        "Only PDF files are supported.");
-
-                    return;
-                }
-            }
-
             SetSavingState(true);
 
+            /*
+             * Authors
+             */
             var authors =
                 new List<Author>();
 
             var authorLines =
                 (AuthorTextBox.Text ?? "")
                     .Split(
-                        new[] { "\r\n", "\n", "\r" },
+                        new[]
+                        {
+                            "\r\n",
+                            "\n",
+                            "\r"
+                        },
                         StringSplitOptions.RemoveEmptyEntries);
 
-            var authorOrder = 1;
+            var authorOrder =
+                1;
 
             foreach (var authorName in authorLines)
             {
@@ -481,18 +457,30 @@ public partial class DocumentEditWindow : Window
                 authors.Add(
                     new Author
                     {
-                        Name = name,
-                        Order = authorOrder++
+                        Name =
+                            name,
+
+                        Order =
+                            authorOrder++
                     });
             }
 
+            /*
+             * Tags
+             */
             var tags =
                 new List<Tag>();
 
             var tagNames =
                 (TagsTextBox.Text ?? "")
                     .Split(
-                        new[] { ',', '、', '\r', '\n' },
+                        new[]
+                        {
+                            ',',
+                            '、',
+                            '\r',
+                            '\n'
+                        },
                         StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var tagName in tagNames)
@@ -517,10 +505,14 @@ public partial class DocumentEditWindow : Window
                 tags.Add(
                     new Tag
                     {
-                        Name = name
+                        Name =
+                            name
                     });
             }
 
+            /*
+             * Update metadata.
+             */
             _document.Title =
                 title;
 
@@ -537,15 +529,18 @@ public partial class DocumentEditWindow : Window
                 publicationDate;
 
             /*
-             * Cover:
+             * Cover
              *
+             * Priority:
              * 1. Local image
              * 2. Selected Open Library image
              * 3. Existing cover
              */
-
             var oldCoverS3Key =
                 _document.CoverS3Key;
+
+            _newCoverS3Key =
+                null;
 
             if (!string.IsNullOrWhiteSpace(
                     _selectedCoverPath))
@@ -582,47 +577,19 @@ public partial class DocumentEditWindow : Window
                 {
                     _document.CoverS3Key =
                         _newCoverS3Key;
-                }
 
-                SetUploadStatus(
-                    "Cover uploaded.",
-                    100);
+                    SetUploadStatus(
+                        "Cover uploaded.",
+                        100);
+                }
             }
 
             /*
-             * PDF
+             * Save metadata.
              */
-            if (!string.IsNullOrWhiteSpace(
-                    _pdfPath))
-            {
-                SetUploadStatus(
-                    "Uploading PDF...",
-                    0);
-
-                var objectKey =
-                    $"pdf/{Guid.NewGuid():N}.pdf";
-
-                var progress =
-                    new Progress<double>(
-                        percent =>
-                        {
-                            SetUploadStatus(
-                                $"Uploading PDF... {percent:0}%",
-                                percent);
-                        });
-
-                await _s3Service.UploadPdfAsync(
-                    _pdfPath,
-                    objectKey,
-                    progress);
-
-                _document.S3Key =
-                    objectKey;
-
-                SetUploadStatus(
-                    "Saving document...",
-                    100);
-            }
+            SetUploadStatus(
+                "Saving document...",
+                100);
 
             var updated =
                 await _repository.UpdateAsync(
@@ -635,7 +602,8 @@ public partial class DocumentEditWindow : Window
             }
 
             /*
-             * DB更新成功後に古いカバーを削除。
+             * Delete old cover only after
+             * the database update succeeded.
              */
             if (!string.IsNullOrWhiteSpace(
                     _newCoverS3Key) &&
@@ -653,21 +621,28 @@ public partial class DocumentEditWindow : Window
                 }
                 catch
                 {
-                    // DB更新を優先する。
+                    /*
+                     * Database update has already succeeded,
+                     * so do not fail the edit operation because
+                     * cleanup of the old cover failed.
+                     */
                 }
             }
 
-            Close();
+            Close(true);
         }
         catch (Exception ex)
         {
             SetSavingState(false);
 
             await ShowErrorAsync(
-                ex.Message);
+                $"Failed to save document.\n\n{ex.Message}");
         }
     }
 
+    /*
+     * Upload local cover to S3.
+     */
     private async Task<string> UploadLocalCoverAsync(
         string filePath)
     {
@@ -692,6 +667,10 @@ public partial class DocumentEditWindow : Window
         return s3Key;
     }
 
+    /*
+     * Download Open Library cover,
+     * then upload it to S3.
+     */
     private async Task<string?> UploadWebCoverAsync(
         BookCoverCandidate candidate)
     {
@@ -728,6 +707,9 @@ public partial class DocumentEditWindow : Window
         }
     }
 
+    /*
+     * Enable / disable controls.
+     */
     private void SetSavingState(
         bool saving)
     {
@@ -735,9 +717,6 @@ public partial class DocumentEditWindow : Window
             !saving;
 
         CancelButton.IsEnabled =
-            !saving;
-
-        BrowsePdfButton.IsEnabled =
             !saving;
 
         SearchCoverButton.IsEnabled =
@@ -763,21 +742,6 @@ public partial class DocumentEditWindow : Window
 
         PublicationDateTextBox.IsEnabled =
             !saving;
-
-        if (saving)
-        {
-            UploadProgressPanel.IsVisible =
-                true;
-
-            UploadProgressBar.Value =
-                0;
-
-            UploadProgressText.Text =
-                "0%";
-
-            UploadStatusText.Text =
-                "Preparing...";
-        }
     }
 
     private void SetUploadStatus(
@@ -800,6 +764,9 @@ public partial class DocumentEditWindow : Window
             status;
     }
 
+    /*
+     * Cancel.
+     */
     private void Cancel_Click(
         object? sender,
         RoutedEventArgs e)
@@ -809,9 +776,12 @@ public partial class DocumentEditWindow : Window
             return;
         }
 
-        Close();
+        Close(false);
     }
 
+    /*
+     * Error dialog.
+     */
     private async Task ShowErrorAsync(
         string message)
     {
@@ -825,20 +795,52 @@ public partial class DocumentEditWindow : Window
                     500,
 
                 Height =
-                    200,
+                    220,
 
+                WindowStartupLocation =
+                    WindowStartupLocation.CenterOwner
+            };
+
+        var button =
+            new Button
+            {
                 Content =
+                    "OK",
+
+                Width =
+                    80,
+
+                HorizontalAlignment =
+                    Avalonia.Layout.HorizontalAlignment.Right
+            };
+
+        button.Click += (_, _) =>
+        {
+            dialog.Close();
+        };
+
+        dialog.Content =
+            new StackPanel
+            {
+                Margin =
+                    new Thickness(20),
+
+                Spacing =
+                    12,
+
+                Children =
+                {
                     new TextBlock
                     {
                         Text =
                             message,
 
                         TextWrapping =
-                            Avalonia.Media.TextWrapping.Wrap,
+                            Avalonia.Media.TextWrapping.Wrap
+                    },
 
-                        Margin =
-                            new Avalonia.Thickness(20)
-                    }
+                    button
+                }
             };
 
         await dialog.ShowDialog(this);

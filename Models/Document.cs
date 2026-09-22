@@ -18,17 +18,24 @@ public class Document
 
     public DateTime? PublicationDate { get; set; }
 
-    public string S3Bucket { get; set; } = "";
-
-    public string S3Key { get; set; } = "";
-
+    // S3 is used only for cover images.
     public string CoverS3Key { get; set; } = "";
 
     public Bitmap? CoverImage { get; set; }
 
+    // Redmine
     public int? RedmineIssueId { get; set; }
 
     public string RedmineIssueUrl { get; set; } = "";
+
+    // Kavita
+    public int? KavitaLibraryId { get; set; }
+
+    public int? KavitaSeriesId { get; set; }
+
+    public int? KavitaVolumeId { get; set; }
+
+    public string KavitaUrl { get; set; } = "";
 
     public DateTime CreatedAt { get; set; }
 

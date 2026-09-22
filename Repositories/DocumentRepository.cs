@@ -34,18 +34,26 @@ public class DocumentRepository
                     title,
                     category,
                     publication_date,
-                    s3_bucket,
-                    s3_key,
-                    cover_s3_key
+                    cover_s3_key,
+                    redmine_issue_id,
+                    redmine_issue_url,
+                    kavita_library_id,
+                    kavita_series_id,
+                    kavita_volume_id,
+                    kavita_url
                 )
                 VALUES
                 (
                     @title,
                     @category,
                     @publication_date,
-                    @s3_bucket,
-                    @s3_key,
-                    @cover_s3_key
+                    @cover_s3_key,
+                    @redmine_issue_id,
+                    @redmine_issue_url,
+                    @kavita_library_id,
+                    @kavita_series_id,
+                    @kavita_volume_id,
+                    @kavita_url
                 );
                 """;
 
@@ -72,22 +80,46 @@ public class DocumentRepository
                     : DBNull.Value);
 
             command.Parameters.AddWithValue(
-                "@s3_bucket",
-                string.IsNullOrWhiteSpace(document.S3Bucket)
-                    ? DBNull.Value
-                    : document.S3Bucket);
-
-            command.Parameters.AddWithValue(
-                "@s3_key",
-                string.IsNullOrWhiteSpace(document.S3Key)
-                    ? DBNull.Value
-                    : document.S3Key);
-
-            command.Parameters.AddWithValue(
                 "@cover_s3_key",
                 string.IsNullOrWhiteSpace(document.CoverS3Key)
                     ? DBNull.Value
                     : document.CoverS3Key);
+
+            command.Parameters.AddWithValue(
+                "@redmine_issue_id",
+                document.RedmineIssueId.HasValue
+                    ? document.RedmineIssueId.Value
+                    : DBNull.Value);
+
+            command.Parameters.AddWithValue(
+                "@redmine_issue_url",
+                string.IsNullOrWhiteSpace(document.RedmineIssueUrl)
+                    ? DBNull.Value
+                    : document.RedmineIssueUrl);
+
+            command.Parameters.AddWithValue(
+                "@kavita_library_id",
+                document.KavitaLibraryId.HasValue
+                    ? document.KavitaLibraryId.Value
+                    : DBNull.Value);
+
+            command.Parameters.AddWithValue(
+                "@kavita_series_id",
+                document.KavitaSeriesId.HasValue
+                    ? document.KavitaSeriesId.Value
+                    : DBNull.Value);
+
+            command.Parameters.AddWithValue(
+                "@kavita_volume_id",
+                document.KavitaVolumeId.HasValue
+                    ? document.KavitaVolumeId.Value
+                    : DBNull.Value);
+
+            command.Parameters.AddWithValue(
+                "@kavita_url",
+                string.IsNullOrWhiteSpace(document.KavitaUrl)
+                    ? DBNull.Value
+                    : document.KavitaUrl);
 
             await command.ExecuteNonQueryAsync();
 
@@ -129,11 +161,13 @@ public class DocumentRepository
                 d.title,
                 d.category,
                 d.publication_date,
-                d.s3_bucket,
-                d.s3_key,
                 d.cover_s3_key,
                 d.redmine_issue_id,
                 d.redmine_issue_url,
+                d.kavita_library_id,
+                d.kavita_series_id,
+                d.kavita_volume_id,
+                d.kavita_url,
                 d.created_at,
                 d.updated_at
             FROM documents d
@@ -222,11 +256,13 @@ public class DocumentRepository
                 d.title,
                 d.category,
                 d.publication_date,
-                d.s3_bucket,
-                d.s3_key,
                 d.cover_s3_key,
                 d.redmine_issue_id,
                 d.redmine_issue_url,
+                d.kavita_library_id,
+                d.kavita_series_id,
+                d.kavita_volume_id,
+                d.kavita_url,
                 d.created_at,
                 d.updated_at
             FROM documents d
@@ -292,11 +328,13 @@ public class DocumentRepository
                     title = @title,
                     category = @category,
                     publication_date = @publication_date,
-                    s3_bucket = @s3_bucket,
-                    s3_key = @s3_key,
                     cover_s3_key = @cover_s3_key,
                     redmine_issue_id = @redmine_issue_id,
-                    redmine_issue_url = @redmine_issue_url
+                    redmine_issue_url = @redmine_issue_url,
+                    kavita_library_id = @kavita_library_id,
+                    kavita_series_id = @kavita_series_id,
+                    kavita_volume_id = @kavita_volume_id,
+                    kavita_url = @kavita_url
                 WHERE id = @id;
                 """;
 
@@ -327,18 +365,6 @@ public class DocumentRepository
                     : DBNull.Value);
 
             command.Parameters.AddWithValue(
-                "@s3_bucket",
-                string.IsNullOrWhiteSpace(document.S3Bucket)
-                    ? DBNull.Value
-                    : document.S3Bucket);
-
-            command.Parameters.AddWithValue(
-                "@s3_key",
-                string.IsNullOrWhiteSpace(document.S3Key)
-                    ? DBNull.Value
-                    : document.S3Key);
-
-            command.Parameters.AddWithValue(
                 "@cover_s3_key",
                 string.IsNullOrWhiteSpace(document.CoverS3Key)
                     ? DBNull.Value
@@ -355,6 +381,30 @@ public class DocumentRepository
                 string.IsNullOrWhiteSpace(document.RedmineIssueUrl)
                     ? DBNull.Value
                     : document.RedmineIssueUrl);
+
+            command.Parameters.AddWithValue(
+                "@kavita_library_id",
+                document.KavitaLibraryId.HasValue
+                    ? document.KavitaLibraryId.Value
+                    : DBNull.Value);
+
+            command.Parameters.AddWithValue(
+                "@kavita_series_id",
+                document.KavitaSeriesId.HasValue
+                    ? document.KavitaSeriesId.Value
+                    : DBNull.Value);
+
+            command.Parameters.AddWithValue(
+                "@kavita_volume_id",
+                document.KavitaVolumeId.HasValue
+                    ? document.KavitaVolumeId.Value
+                    : DBNull.Value);
+
+            command.Parameters.AddWithValue(
+                "@kavita_url",
+                string.IsNullOrWhiteSpace(document.KavitaUrl)
+                    ? DBNull.Value
+                    : document.KavitaUrl);
 
             var affectedRows =
                 await command.ExecuteNonQueryAsync();
@@ -455,18 +505,6 @@ public class DocumentRepository
                     : reader.GetDateTime(
                         reader.GetOrdinal("publication_date")),
 
-            S3Bucket =
-                reader.IsDBNull(
-                    reader.GetOrdinal("s3_bucket"))
-                    ? ""
-                    : reader.GetString("s3_bucket"),
-
-            S3Key =
-                reader.IsDBNull(
-                    reader.GetOrdinal("s3_key"))
-                    ? ""
-                    : reader.GetString("s3_key"),
-
             CoverS3Key =
                 reader.IsDBNull(
                     reader.GetOrdinal("cover_s3_key"))
@@ -485,6 +523,33 @@ public class DocumentRepository
                     reader.GetOrdinal("redmine_issue_url"))
                     ? ""
                     : reader.GetString("redmine_issue_url"),
+
+            KavitaLibraryId =
+                reader.IsDBNull(
+                    reader.GetOrdinal("kavita_library_id"))
+                    ? null
+                    : reader.GetInt32(
+                        reader.GetOrdinal("kavita_library_id")),
+
+            KavitaSeriesId =
+                reader.IsDBNull(
+                    reader.GetOrdinal("kavita_series_id"))
+                    ? null
+                    : reader.GetInt32(
+                        reader.GetOrdinal("kavita_series_id")),
+
+            KavitaVolumeId =
+                reader.IsDBNull(
+                    reader.GetOrdinal("kavita_volume_id"))
+                    ? null
+                    : reader.GetInt32(
+                        reader.GetOrdinal("kavita_volume_id")),
+
+            KavitaUrl =
+                reader.IsDBNull(
+                    reader.GetOrdinal("kavita_url"))
+                    ? ""
+                    : reader.GetString("kavita_url"),
 
             CreatedAt =
                 reader.GetDateTime("created_at"),
