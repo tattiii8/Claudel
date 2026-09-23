@@ -5,9 +5,9 @@
         FontFamily="Segoe UI"
         Title="New Document"
         Width="900"
-        Height="720"
+        Height="760"
         MinWidth="760"
-        MinHeight="620"
+        MinHeight="650"
         WindowStartupLocation="CenterOwner">
 
     <Window.Styles>
@@ -20,6 +20,11 @@
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="6,4"/>
             <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="MinHeight" Value="28"/>
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="MinHeight" Value="28"/>
         </Style>
 
@@ -42,11 +47,32 @@
     </Window.Styles>
 
     <Grid Margin="16"
-          RowDefinitions="Auto,Auto,Auto,Auto,*,Auto"
+          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto"
           RowSpacing="10">
 
-        <!-- Title -->
+        <!-- Document Type -->
         <Grid Grid.Row="0"
+              ColumnDefinitions="100,*">
+
+            <TextBlock Text="Type"
+                       VerticalAlignment="Center"/>
+
+            <ComboBox Grid.Column="1"
+                      x:Name="DocumentTypeComboBox"
+                      SelectionChanged="DocumentTypeComboBox_SelectionChanged">
+
+                <ComboBoxItem Content="Book"
+                              Tag="Book"/>
+
+                <ComboBoxItem Content="Journal"
+                              Tag="Journal"/>
+
+            </ComboBox>
+
+        </Grid>
+
+        <!-- Title -->
+        <Grid Grid.Row="1"
               ColumnDefinitions="100,*">
 
             <TextBlock Text="Title"
@@ -59,7 +85,7 @@
         </Grid>
 
         <!-- Author -->
-        <Grid Grid.Row="1"
+        <Grid Grid.Row="2"
               ColumnDefinitions="100,*">
 
             <TextBlock Text="Author"
@@ -72,13 +98,13 @@
                      AcceptsReturn="True"
                      TextWrapping="Wrap"
                      VerticalContentAlignment="Top"
-                     MinHeight="80"
-                     MaxHeight="120"/>
+                     MinHeight="70"
+                     MaxHeight="100"/>
 
         </Grid>
 
         <!-- Category -->
-        <Grid Grid.Row="2"
+        <Grid Grid.Row="3"
               ColumnDefinitions="100,*">
 
             <TextBlock Text="Category"
@@ -91,7 +117,7 @@
         </Grid>
 
         <!-- Tags -->
-        <Grid Grid.Row="3"
+        <Grid Grid.Row="4"
               ColumnDefinitions="100,*">
 
             <TextBlock Text="Tags"
@@ -104,13 +130,13 @@
                      AcceptsReturn="True"
                      TextWrapping="Wrap"
                      VerticalContentAlignment="Top"
-                     MinHeight="50"
-                     MaxHeight="80"/>
+                     MinHeight="45"
+                     MaxHeight="70"/>
 
         </Grid>
 
         <!-- Publication Date -->
-        <Grid Grid.Row="4"
+        <Grid Grid.Row="5"
               ColumnDefinitions="100,*">
 
             <TextBlock Text="Publication Date"
@@ -122,129 +148,201 @@
 
         </Grid>
 
-        <!-- Cover -->
-        <Grid Grid.Row="5"
-              ColumnDefinitions="*,260"
-              ColumnSpacing="16">
+        <!-- Main content -->
+        <ScrollViewer Grid.Row="6"
+                      VerticalScrollBarVisibility="Auto">
 
-            <!-- Search results -->
-            <Grid RowDefinitions="Auto,*"
-                  RowSpacing="8">
+            <StackPanel Spacing="12">
 
-                <Grid ColumnDefinitions="*,Auto,Auto"
-                      ColumnSpacing="6">
+                <!-- Journal Search -->
+                <Border x:Name="JournalSearchPanel"
+                        IsVisible="False"
+                        BorderThickness="1"
+                        Padding="12">
 
-                    <TextBlock Text="Web Cover Search"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"/>
+                    <StackPanel Spacing="10">
 
-                    <Button Grid.Column="1"
-                            x:Name="SearchCoverButton"
-                            Content="Search Web"
-                            Click="SearchCover_Click"/>
+                        <TextBlock Text="Journal Article Search"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"/>
 
-                    <Button Grid.Column="2"
-                            x:Name="UploadCoverButton"
-                            Content="Upload Image"
-                            Click="UploadCover_Click"/>
+                        <Grid ColumnDefinitions="*,*,Auto"
+                              ColumnSpacing="8">
 
-                </Grid>
+                            <TextBox x:Name="CrossrefTitleTextBox"
+                                     PlaceholderText="Article title"/>
 
-                <ListBox Grid.Row="1"
-                         x:Name="CoverCandidatesListBox"
-                         SelectionChanged="CoverCandidatesListBox_SelectionChanged">
+                            <TextBox Grid.Column="1"
+                                     x:Name="CrossrefAuthorTextBox"
+                                     PlaceholderText="Author"/>
 
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
+                            <Button Grid.Column="2"
+                                    x:Name="CrossrefSearchButton"
+                                    Content="Search Crossref"
+                                    Click="CrossrefSearch_Click"/>
 
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="models:BookCoverCandidate">
+                        </Grid>
 
-                            <Border Width="150"
-                                    Height="265"
-                                    Margin="4"
-                                    Padding="6"
-                                    BorderThickness="1">
+                        <ListBox x:Name="CrossrefResultsListBox"
+                                 Height="180"
+                                 SelectionChanged="CrossrefResultsListBox_SelectionChanged">
 
-                                <Grid RowDefinitions="190,Auto,Auto,*"
-                                      RowSpacing="4">
+                            <ListBox.ItemTemplate>
 
-                                    <Image Source="{Binding CoverUrl}"
-                                           Stretch="Uniform"/>
+                                <DataTemplate x:DataType="models:CrossrefWork">
 
-                                    <TextBlock Grid.Row="1"
-                                               Text="{Binding Title}"
-                                               TextWrapping="Wrap"
-                                               MaxLines="2"/>
+                                    <Border Padding="8"
+                                            Margin="2"
+                                            BorderThickness="1">
 
-                                    <TextBlock Grid.Row="2"
-                                               Text="{Binding Author}"
-                                               Opacity="0.65"
-                                               TextWrapping="Wrap"
-                                               MaxLines="1"/>
+                                        <StackPanel Spacing="3">
 
-                                    <TextBlock Grid.Row="3"
-                                               Text="{Binding DisplayYear}"
-                                               Opacity="0.55"/>
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontWeight="SemiBold"
+                                                       TextWrapping="Wrap"/>
 
-                                </Grid>
+                                            <TextBlock Text="{Binding AuthorDisplay}"
+                                                       Opacity="0.7"
+                                                       TextWrapping="Wrap"/>
 
-                            </Border>
+                                            <TextBlock Text="{Binding DisplayBibliography}"
+                                                       Opacity="0.7"
+                                                       TextWrapping="Wrap"/>
 
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
+                                            <TextBlock Text="{Binding DOI}"
+                                                       Opacity="0.55"/>
 
-                </ListBox>
+                                        </StackPanel>
 
-            </Grid>
+                                    </Border>
 
-            <!-- Selected cover -->
-            <Border Grid.Column="1"
-                    BorderThickness="1"
-                    Padding="12">
+                                </DataTemplate>
 
-                <Grid RowDefinitions="Auto,*,Auto"
-                      RowSpacing="10">
+                            </ListBox.ItemTemplate>
 
-                    <TextBlock Text="Selected Cover"
-                               FontSize="14"
-                               FontWeight="SemiBold"/>
+                        </ListBox>
 
-                    <Border Grid.Row="1"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
+                        <!-- Journal metadata -->
+                        <Grid ColumnDefinitions="100,*,100,*"
+                              RowDefinitions="Auto,Auto,Auto"
+                              RowSpacing="8"
+                              ColumnSpacing="8">
 
-                        <Image x:Name="SelectedCoverImage"
-                               Width="210"
-                               Height="300"
-                               Stretch="Uniform"/>
+                            <TextBlock Text="Journal"
+                                       VerticalAlignment="Center"/>
 
-                    </Border>
+                            <TextBox Grid.Column="1"
+                                     x:Name="JournalNameTextBox"/>
 
-                    <StackPanel Grid.Row="2"
-                                Spacing="4">
+                            <TextBlock Grid.Column="2"
+                                       Text="Volume"
+                                       VerticalAlignment="Center"/>
 
-                        <TextBlock x:Name="SelectedCoverTitle"
-                                   TextWrapping="Wrap"/>
+                            <TextBox Grid.Column="3"
+                                     x:Name="VolumeTextBox"/>
 
-                        <TextBlock x:Name="SelectedCoverAuthor"
-                                   Opacity="0.65"
-                                   TextWrapping="Wrap"/>
+                            <TextBlock Grid.Row="1"
+                                       Text="Issue"
+                                       VerticalAlignment="Center"/>
+
+                            <TextBox Grid.Row="1"
+                                     Grid.Column="1"
+                                     x:Name="IssueTextBox"/>
+
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="2"
+                                       Text="Pages"
+                                       VerticalAlignment="Center"/>
+
+                            <TextBox Grid.Row="1"
+                                     Grid.Column="3"
+                                     x:Name="PagesTextBox"/>
+
+                            <TextBlock Grid.Row="2"
+                                       Text="DOI"
+                                       VerticalAlignment="Center"/>
+
+                            <TextBox Grid.Row="2"
+                                     Grid.Column="1"
+                                     Grid.ColumnSpan="3"
+                                     x:Name="DoiTextBox"/>
+
+                        </Grid>
 
                     </StackPanel>
 
+                </Border>
+
+                <!-- Cover -->
+                <Grid ColumnDefinitions="*,260"
+                      ColumnSpacing="16">
+
+                    <!-- Local cover -->
+                    <StackPanel Spacing="8">
+
+                        <Grid ColumnDefinitions="*,Auto">
+
+                            <TextBlock Text="Cover"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+
+                            <Button Grid.Column="1"
+                                    x:Name="UploadCoverButton"
+                                    Content="Upload Image"
+                                    Click="UploadCover_Click"/>
+
+                        </Grid>
+
+                    </StackPanel>
+
+                    <!-- Selected cover -->
+                    <Border Grid.Column="1"
+                            BorderThickness="1"
+                            Padding="12">
+
+                        <Grid RowDefinitions="Auto,*,Auto"
+                              RowSpacing="10">
+
+                            <TextBlock Text="Selected Cover"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"/>
+
+                            <Border Grid.Row="1"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+
+                                <Image x:Name="SelectedCoverImage"
+                                       Width="210"
+                                       Height="300"
+                                       Stretch="Uniform"/>
+
+                            </Border>
+
+                            <StackPanel Grid.Row="2"
+                                        Spacing="4">
+
+                                <TextBlock x:Name="SelectedCoverTitle"
+                                           TextWrapping="Wrap"/>
+
+                                <TextBlock x:Name="SelectedCoverAuthor"
+                                           Opacity="0.65"
+                                           TextWrapping="Wrap"/>
+
+                            </StackPanel>
+
+                        </Grid>
+
+                    </Border>
+
                 </Grid>
 
-            </Border>
+            </StackPanel>
 
-        </Grid>
+        </ScrollViewer>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="6"
+        <StackPanel Grid.Row="7"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Spacing="8">

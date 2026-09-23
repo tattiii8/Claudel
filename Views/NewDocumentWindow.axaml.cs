@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,14 +19,12 @@ public partial class NewDocumentWindow : Window
 {
     private readonly DocumentRepository _repository;
 
-    private readonly OpenLibraryService _openLibraryService;
+    private readonly CrossrefService _crossrefService;
 
     private readonly S3Service _s3Service;
 
-    private readonly ObservableCollection<BookCoverCandidate>
-        _coverCandidates = new();
-
-    private BookCoverCandidate? _selectedCover;
+    private readonly ObservableCollection<CrossrefWork>
+        _crossrefResults = new();
 
     private string? _selectedCoverPath;
 
@@ -37,138 +36,180 @@ public partial class NewDocumentWindow : Window
 
         _repository = repository;
 
-        _openLibraryService =
-            new OpenLibraryService();
+        _crossrefService =
+            new CrossrefService();
 
         _s3Service =
             new S3Service(settings);
 
-        CoverCandidatesListBox.ItemsSource =
-            _coverCandidates;
+        CrossrefResultsListBox.ItemsSource =
+            _crossrefResults;
+
+        // Initialize after InitializeComponent().
+        // Do not use SelectedIndex="0" in AXAML,
+        // because SelectionChanged can fire during XAML initialization.
+        DocumentTypeComboBox.SelectedIndex = 0;
+
+        SetDocumentType("Book");
     }
 
     /*
-     * Web cover search
+     * Document type
      */
-    private async void SearchCover_Click(
+    private void DocumentTypeComboBox_SelectionChanged(
+        object? sender,
+        SelectionChangedEventArgs e)
+    {
+        if (DocumentTypeComboBox.SelectedItem
+            is not ComboBoxItem item)
+        {
+            return;
+        }
+
+        var documentType =
+            item.Tag?.ToString() ?? "Book";
+
+        SetDocumentType(documentType);
+    }
+
+    private void SetDocumentType(
+        string documentType)
+    {
+        var isJournal =
+            string.Equals(
+                documentType,
+                "Journal",
+                StringComparison.OrdinalIgnoreCase);
+
+        JournalSearchPanel.IsVisible =
+            isJournal;
+
+        if (!isJournal)
+        {
+            _crossrefResults.Clear();
+
+            CrossrefResultsListBox.SelectedItem =
+                null;
+        }
+    }
+
+    /*
+     * Crossref search
+     */
+    private async void CrossrefSearch_Click(
         object? sender,
         RoutedEventArgs e)
     {
-        await SearchCoversAsync();
+        await SearchCrossrefAsync();
     }
 
-    private async Task SearchCoversAsync()
+    private async Task SearchCrossrefAsync()
     {
         var title =
-            TitleTextBox.Text?.Trim() ?? "";
+            CrossrefTitleTextBox.Text?.Trim() ?? "";
 
         var author =
-            AuthorTextBox.Text?.Trim() ?? "";
+            CrossrefAuthorTextBox.Text?.Trim() ?? "";
 
         if (string.IsNullOrWhiteSpace(title) &&
             string.IsNullOrWhiteSpace(author))
         {
             await ShowMessageAsync(
-                "Please enter a title or author.");
+                "Please enter an article title or author.");
 
             return;
         }
 
         try
         {
-            SearchCoverButton.IsEnabled = false;
-            SearchCoverButton.Content = "Searching...";
+            CrossrefSearchButton.IsEnabled = false;
+            CrossrefSearchButton.Content = "Searching...";
 
-            _coverCandidates.Clear();
+            _crossrefResults.Clear();
 
-            _selectedCover = null;
-            _selectedCoverPath = null;
-
-            CoverCandidatesListBox.SelectedItem = null;
-
-            SelectedCoverImage.Source = null;
-            SelectedCoverTitle.Text = "";
-            SelectedCoverAuthor.Text = "";
+            CrossrefResultsListBox.SelectedItem =
+                null;
 
             var results =
-                await _openLibraryService.SearchAsync(
-                    title,
-                    author);
+                await _crossrefService
+                    .SearchJournalArticlesAsync(
+                        title,
+                        author);
 
             foreach (var result in results)
             {
-                _coverCandidates.Add(result);
+                _crossrefResults.Add(result);
             }
 
-            if (_coverCandidates.Count == 0)
+            if (_crossrefResults.Count == 0)
             {
                 await ShowMessageAsync(
-                    "No cover candidates were found.");
+                    "No journal articles were found.");
             }
         }
         catch (Exception ex)
         {
             await ShowMessageAsync(
-                $"Cover search failed.\n\n{ex.Message}");
+                $"Crossref search failed.\n\n{ex.Message}");
         }
         finally
         {
-            SearchCoverButton.IsEnabled = true;
-            SearchCoverButton.Content = "Search Web";
+            CrossrefSearchButton.IsEnabled = true;
+
+            CrossrefSearchButton.Content =
+                "Search Crossref";
         }
     }
 
     /*
-     * Select web cover
+     * Select Crossref result
      */
-    private async void CoverCandidatesListBox_SelectionChanged(
+    private void CrossrefResultsListBox_SelectionChanged(
         object? sender,
         SelectionChangedEventArgs e)
     {
-        if (CoverCandidatesListBox.SelectedItem
-            is not BookCoverCandidate candidate)
+        if (CrossrefResultsListBox.SelectedItem
+            is not CrossrefWork work)
         {
             return;
         }
 
-        _selectedCover = candidate;
+        ApplyCrossrefWork(work);
+    }
 
-        _selectedCoverPath = null;
+    private void ApplyCrossrefWork(
+        CrossrefWork work)
+    {
+        TitleTextBox.Text =
+            work.Title;
 
-        SelectedCoverTitle.Text =
-            candidate.Title;
+        AuthorTextBox.Text =
+            string.Join(
+                Environment.NewLine,
+                work.Authors);
 
-        SelectedCoverAuthor.Text =
-            candidate.Author;
+        JournalNameTextBox.Text =
+            work.JournalName;
 
-        if (string.IsNullOrWhiteSpace(
-                candidate.CoverUrl))
+        VolumeTextBox.Text =
+            work.Volume;
+
+        IssueTextBox.Text =
+            work.Issue;
+
+        PagesTextBox.Text =
+            work.Pages;
+
+        DoiTextBox.Text =
+            work.DOI;
+
+        if (work.PublicationDate.HasValue)
         {
-            SelectedCoverImage.Source = null;
-            return;
-        }
-
-        try
-        {
-            using var httpClient =
-                new System.Net.Http.HttpClient();
-
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
-                "Claudel/1.0 (book management application)");
-
-            var bytes =
-                await httpClient.GetByteArrayAsync(
-                    candidate.CoverUrl);
-
-            await using var stream =
-                new MemoryStream(bytes);
-
-            SelectedCoverImage.Source =
-                new Bitmap(stream);
-        }
-        catch
-        {
-            SelectedCoverImage.Source = null;
+            PublicationDateTextBox.Text =
+                work.PublicationDate.Value
+                    .ToString(
+                        "yyyy-MM-dd",
+                        CultureInfo.InvariantCulture);
         }
     }
 
@@ -225,11 +266,8 @@ public partial class NewDocumentWindow : Window
             var bitmap =
                 new Bitmap(stream);
 
-            _selectedCover = null;
-
-            CoverCandidatesListBox.SelectedItem = null;
-
-            _selectedCoverPath = path;
+            _selectedCoverPath =
+                path;
 
             SelectedCoverImage.Source =
                 bitmap;
@@ -294,33 +332,24 @@ public partial class NewDocumentWindow : Window
             return;
         }
 
+        var documentType =
+            GetSelectedDocumentType();
+
         try
         {
             SetInputEnabled(false);
 
-            string? coverS3Key = null;
-
             /*
              * Cover
-             *
-             * Priority:
-             * 1. Local image
-             * 2. Open Library
              */
+            string? coverS3Key = null;
+
             if (!string.IsNullOrWhiteSpace(
                     _selectedCoverPath))
             {
                 coverS3Key =
                     await UploadLocalCoverAsync(
                         _selectedCoverPath);
-            }
-            else if (_selectedCover != null &&
-                     !string.IsNullOrWhiteSpace(
-                         _selectedCover.CoverUrl))
-            {
-                coverS3Key =
-                    await UploadWebCoverAsync(
-                        _selectedCover);
             }
 
             /*
@@ -337,8 +366,8 @@ public partial class NewDocumentWindow : Window
                 if (!DateTime.TryParseExact(
                         publicationDateText,
                         "yyyy-MM-dd",
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        System.Globalization.DateTimeStyles.None,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
                         out var parsedDate))
                 {
                     await ShowMessageAsync(
@@ -421,6 +450,38 @@ public partial class NewDocumentWindow : Window
                     });
             }
 
+            /*
+             * Journal metadata
+             *
+             * These values are only saved for Journal.
+             */
+            var doi = "";
+            var journalName = "";
+            var volume = "";
+            var issue = "";
+            var pages = "";
+
+            if (string.Equals(
+                    documentType,
+                    "Journal",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                doi =
+                    DoiTextBox.Text?.Trim() ?? "";
+
+                journalName =
+                    JournalNameTextBox.Text?.Trim() ?? "";
+
+                volume =
+                    VolumeTextBox.Text?.Trim() ?? "";
+
+                issue =
+                    IssueTextBox.Text?.Trim() ?? "";
+
+                pages =
+                    PagesTextBox.Text?.Trim() ?? "";
+            }
+
             var document =
                 new Document
                 {
@@ -430,6 +491,23 @@ public partial class NewDocumentWindow : Window
 
                     Category =
                         CategoryTextBox.Text?.Trim() ?? "",
+
+                    DocumentType =
+                        documentType,
+
+                    DOI = doi,
+
+                    JournalName =
+                        journalName,
+
+                    Volume =
+                        volume,
+
+                    Issue =
+                        issue,
+
+                    Pages =
+                        pages,
 
                     Tags = tags,
 
@@ -454,6 +532,18 @@ public partial class NewDocumentWindow : Window
         {
             SetInputEnabled(true);
         }
+    }
+
+    private string GetSelectedDocumentType()
+    {
+        if (DocumentTypeComboBox.SelectedItem
+            is ComboBoxItem item)
+        {
+            return item.Tag?.ToString()
+                   ?? "Book";
+        }
+
+        return "Book";
     }
 
     /*
@@ -484,51 +574,14 @@ public partial class NewDocumentWindow : Window
     }
 
     /*
-     * Download Open Library cover,
-     * then upload it to S3.
-     */
-    private async Task<string?> UploadWebCoverAsync(
-        BookCoverCandidate candidate)
-    {
-        var tempCoverPath =
-            await _openLibraryService
-                .DownloadCoverAsync(candidate);
-
-        if (string.IsNullOrWhiteSpace(
-                tempCoverPath))
-        {
-            return null;
-        }
-
-        try
-        {
-            var coverS3Key =
-                $"covers/{Guid.NewGuid():N}.jpg";
-
-            await _s3Service.UploadCoverAsync(
-                tempCoverPath,
-                coverS3Key);
-
-            return coverS3Key;
-        }
-        finally
-        {
-            try
-            {
-                File.Delete(tempCoverPath);
-            }
-            catch
-            {
-            }
-        }
-    }
-
-    /*
      * Enable / disable controls
      */
     private void SetInputEnabled(
         bool enabled)
     {
+        DocumentTypeComboBox.IsEnabled =
+            enabled;
+
         TitleTextBox.IsEnabled =
             enabled;
 
@@ -544,13 +597,34 @@ public partial class NewDocumentWindow : Window
         PublicationDateTextBox.IsEnabled =
             enabled;
 
-        SearchCoverButton.IsEnabled =
+        CrossrefTitleTextBox.IsEnabled =
+            enabled;
+
+        CrossrefAuthorTextBox.IsEnabled =
+            enabled;
+
+        CrossrefSearchButton.IsEnabled =
+            enabled;
+
+        CrossrefResultsListBox.IsEnabled =
+            enabled;
+
+        JournalNameTextBox.IsEnabled =
+            enabled;
+
+        VolumeTextBox.IsEnabled =
+            enabled;
+
+        IssueTextBox.IsEnabled =
+            enabled;
+
+        PagesTextBox.IsEnabled =
+            enabled;
+
+        DoiTextBox.IsEnabled =
             enabled;
 
         UploadCoverButton.IsEnabled =
-            enabled;
-
-        CoverCandidatesListBox.IsEnabled =
             enabled;
     }
 
