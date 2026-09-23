@@ -77,11 +77,6 @@
                 x:Name="ClientIdTextBox"
                 PlaceholderText="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
 
-            <TextBlock
-                Text="初回ログイン時にMicrosoftのブラウザ画面が開きます。"
-                Opacity="0.65"
-                TextWrapping="Wrap"
-                Margin="0,10,0,0"/>
 
             <TextBlock
                 x:Name="StatusTextBlock"
