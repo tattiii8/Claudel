@@ -128,11 +128,16 @@ public partial class DocumentEditWindow : Window
         var isJournal =
             string.Equals(
                 documentType,
-                "Journal",
-                StringComparison.OrdinalIgnoreCase);
+                DocumentTypes.Journal,
+                StringComparison.Ordinal);
 
         DocumentTypeComboBox.SelectedIndex =
-            isJournal ? 1 : 0;
+            documentType switch
+            {
+                DocumentTypes.Journal => 1,
+                DocumentTypes.Resume => 2,
+                _ => 0
+            };
 
         JournalSearchPanel.IsVisible =
             isJournal;
@@ -156,13 +161,13 @@ public partial class DocumentEditWindow : Window
 
         var documentType =
             item.Tag?.ToString()
-            ?? "Book";
+            ?? DocumentTypes.Book;
 
         var isJournal =
             string.Equals(
                 documentType,
-                "Journal",
-                StringComparison.OrdinalIgnoreCase);
+                DocumentTypes.Journal,
+                StringComparison.Ordinal);
 
         JournalSearchPanel.IsVisible =
             isJournal;

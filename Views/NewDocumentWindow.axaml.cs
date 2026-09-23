@@ -46,16 +46,13 @@ public partial class NewDocumentWindow : Window
             _crossrefResults;
 
         // Initialize after InitializeComponent().
-        // Do not use SelectedIndex="0" in AXAML,
-        // because SelectionChanged can fire during XAML initialization.
+        // Do not use SelectedIndex="0" in AXAML.
         DocumentTypeComboBox.SelectedIndex = 0;
 
-        SetDocumentType("Book");
+        SetDocumentType(
+            DocumentTypes.Book);
     }
 
-    /*
-     * Document type
-     */
     private void DocumentTypeComboBox_SelectionChanged(
         object? sender,
         SelectionChangedEventArgs e)
@@ -67,7 +64,8 @@ public partial class NewDocumentWindow : Window
         }
 
         var documentType =
-            item.Tag?.ToString() ?? "Book";
+            item.Tag?.ToString()
+            ?? DocumentTypes.Book;
 
         SetDocumentType(documentType);
     }
@@ -78,8 +76,8 @@ public partial class NewDocumentWindow : Window
         var isJournal =
             string.Equals(
                 documentType,
-                "Journal",
-                StringComparison.OrdinalIgnoreCase);
+                DocumentTypes.Journal,
+                StringComparison.Ordinal);
 
         JournalSearchPanel.IsVisible =
             isJournal;
@@ -93,9 +91,6 @@ public partial class NewDocumentWindow : Window
         }
     }
 
-    /*
-     * Crossref search
-     */
     private async void CrossrefSearch_Click(
         object? sender,
         RoutedEventArgs e)
@@ -106,10 +101,12 @@ public partial class NewDocumentWindow : Window
     private async Task SearchCrossrefAsync()
     {
         var title =
-            CrossrefTitleTextBox.Text?.Trim() ?? "";
+            CrossrefTitleTextBox.Text?.Trim()
+            ?? "";
 
         var author =
-            CrossrefAuthorTextBox.Text?.Trim() ?? "";
+            CrossrefAuthorTextBox.Text?.Trim()
+            ?? "";
 
         if (string.IsNullOrWhiteSpace(title) &&
             string.IsNullOrWhiteSpace(author))
@@ -122,8 +119,11 @@ public partial class NewDocumentWindow : Window
 
         try
         {
-            CrossrefSearchButton.IsEnabled = false;
-            CrossrefSearchButton.Content = "Searching...";
+            CrossrefSearchButton.IsEnabled =
+                false;
+
+            CrossrefSearchButton.Content =
+                "Searching...";
 
             _crossrefResults.Clear();
 
@@ -154,16 +154,14 @@ public partial class NewDocumentWindow : Window
         }
         finally
         {
-            CrossrefSearchButton.IsEnabled = true;
+            CrossrefSearchButton.IsEnabled =
+                true;
 
             CrossrefSearchButton.Content =
                 "Search Crossref";
         }
     }
 
-    /*
-     * Select Crossref result
-     */
     private void CrossrefResultsListBox_SelectionChanged(
         object? sender,
         SelectionChangedEventArgs e)
@@ -213,9 +211,6 @@ public partial class NewDocumentWindow : Window
         }
     }
 
-    /*
-     * Upload local cover image
-     */
     private async void UploadCover_Click(
         object? sender,
         RoutedEventArgs e)
@@ -309,9 +304,6 @@ public partial class NewDocumentWindow : Window
                    StringComparison.OrdinalIgnoreCase);
     }
 
-    /*
-     * Create document
-     */
     private async void Create_Click(
         object? sender,
         RoutedEventArgs e)
@@ -322,7 +314,8 @@ public partial class NewDocumentWindow : Window
     private async Task CreateDocumentAsync()
     {
         var title =
-            TitleTextBox.Text?.Trim() ?? "";
+            TitleTextBox.Text?.Trim()
+            ?? "";
 
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -339,9 +332,6 @@ public partial class NewDocumentWindow : Window
         {
             SetInputEnabled(false);
 
-            /*
-             * Cover
-             */
             string? coverS3Key = null;
 
             if (!string.IsNullOrWhiteSpace(
@@ -352,13 +342,11 @@ public partial class NewDocumentWindow : Window
                         _selectedCoverPath);
             }
 
-            /*
-             * Publication date
-             */
             DateTime? publicationDate = null;
 
             var publicationDateText =
-                PublicationDateTextBox.Text?.Trim() ?? "";
+                PublicationDateTextBox.Text?.Trim()
+                ?? "";
 
             if (!string.IsNullOrWhiteSpace(
                     publicationDateText))
@@ -380,16 +368,18 @@ public partial class NewDocumentWindow : Window
                     parsedDate.Date;
             }
 
-            /*
-             * Authors
-             */
             var authors =
                 new List<Author>();
 
             var authorLines =
                 (AuthorTextBox.Text ?? "")
                     .Split(
-                        new[] { "\r\n", "\n", "\r" },
+                        new[]
+                        {
+                            "\r\n",
+                            "\n",
+                            "\r"
+                        },
                         StringSplitOptions.RemoveEmptyEntries);
 
             var authorOrder = 1;
@@ -412,16 +402,19 @@ public partial class NewDocumentWindow : Window
                     });
             }
 
-            /*
-             * Tags
-             */
             var tags =
                 new List<Tag>();
 
             var tagNames =
                 (TagsTextBox.Text ?? "")
                     .Split(
-                        new[] { ',', '、', '\r', '\n' },
+                        new[]
+                        {
+                            ',',
+                            '、',
+                            '\r',
+                            '\n'
+                        },
                         StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var tagName in tagNames)
@@ -450,11 +443,6 @@ public partial class NewDocumentWindow : Window
                     });
             }
 
-            /*
-             * Journal metadata
-             *
-             * These values are only saved for Journal.
-             */
             var doi = "";
             var journalName = "";
             var volume = "";
@@ -463,23 +451,28 @@ public partial class NewDocumentWindow : Window
 
             if (string.Equals(
                     documentType,
-                    "Journal",
-                    StringComparison.OrdinalIgnoreCase))
+                    DocumentTypes.Journal,
+                    StringComparison.Ordinal))
             {
                 doi =
-                    DoiTextBox.Text?.Trim() ?? "";
+                    DoiTextBox.Text?.Trim()
+                    ?? "";
 
                 journalName =
-                    JournalNameTextBox.Text?.Trim() ?? "";
+                    JournalNameTextBox.Text?.Trim()
+                    ?? "";
 
                 volume =
-                    VolumeTextBox.Text?.Trim() ?? "";
+                    VolumeTextBox.Text?.Trim()
+                    ?? "";
 
                 issue =
-                    IssueTextBox.Text?.Trim() ?? "";
+                    IssueTextBox.Text?.Trim()
+                    ?? "";
 
                 pages =
-                    PagesTextBox.Text?.Trim() ?? "";
+                    PagesTextBox.Text?.Trim()
+                    ?? "";
             }
 
             var document =
@@ -490,7 +483,8 @@ public partial class NewDocumentWindow : Window
                     Authors = authors,
 
                     Category =
-                        CategoryTextBox.Text?.Trim() ?? "",
+                        CategoryTextBox.Text?.Trim()
+                        ?? "",
 
                     DocumentType =
                         documentType,
@@ -540,15 +534,12 @@ public partial class NewDocumentWindow : Window
             is ComboBoxItem item)
         {
             return item.Tag?.ToString()
-                   ?? "Book";
+                   ?? DocumentTypes.Book;
         }
 
-        return "Book";
+        return DocumentTypes.Book;
     }
 
-    /*
-     * Upload local cover to S3
-     */
     private async Task<string> UploadLocalCoverAsync(
         string filePath)
     {
@@ -573,9 +564,6 @@ public partial class NewDocumentWindow : Window
         return s3Key;
     }
 
-    /*
-     * Enable / disable controls
-     */
     private void SetInputEnabled(
         bool enabled)
     {
@@ -628,9 +616,6 @@ public partial class NewDocumentWindow : Window
             enabled;
     }
 
-    /*
-     * Cancel
-     */
     private void Cancel_Click(
         object? sender,
         RoutedEventArgs e)
@@ -638,9 +623,6 @@ public partial class NewDocumentWindow : Window
         Close(false);
     }
 
-    /*
-     * Message dialog
-     */
     private async Task ShowMessageAsync(
         string message)
     {
@@ -666,22 +648,27 @@ public partial class NewDocumentWindow : Window
             window.Close();
         };
 
-        window.Content = new StackPanel
-        {
-            Margin = new Thickness(16),
-            Spacing = 12,
-            Children =
+        window.Content =
+            new StackPanel
             {
-                new TextBlock
-                {
-                    Text = message,
-                    TextWrapping =
-                        Avalonia.Media.TextWrapping.Wrap
-                },
+                Margin =
+                    new Thickness(16),
 
-                button
-            }
-        };
+                Spacing = 12,
+
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = message,
+
+                        TextWrapping =
+                            Avalonia.Media.TextWrapping.Wrap
+                    },
+
+                    button
+                }
+            };
 
         await window.ShowDialog(this);
     }

@@ -67,6 +67,9 @@
                 <ComboBoxItem Content="Journal"
                               Tag="Journal"/>
 
+                <ComboBoxItem Content="Résumé"
+                              Tag="Résumé"/>
+
             </ComboBox>
 
         </Grid>
