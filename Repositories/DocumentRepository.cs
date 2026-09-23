@@ -33,6 +33,12 @@ public class DocumentRepository
                 (
                     title,
                     category,
+                    document_type,
+                    doi,
+                    journal_name,
+                    volume,
+                    issue,
+                    pages,
                     publication_date,
                     cover_s3_key,
                     redmine_issue_id,
@@ -46,6 +52,12 @@ public class DocumentRepository
                 (
                     @title,
                     @category,
+                    @document_type,
+                    @doi,
+                    @journal_name,
+                    @volume,
+                    @issue,
+                    @pages,
                     @publication_date,
                     @cover_s3_key,
                     @redmine_issue_id,
@@ -72,6 +84,42 @@ public class DocumentRepository
                 string.IsNullOrWhiteSpace(document.Category)
                     ? DBNull.Value
                     : document.Category);
+
+            command.Parameters.AddWithValue(
+                "@document_type",
+                string.IsNullOrWhiteSpace(document.DocumentType)
+                    ? "Book"
+                    : document.DocumentType);
+
+            command.Parameters.AddWithValue(
+                "@doi",
+                string.IsNullOrWhiteSpace(document.DOI)
+                    ? ""
+                    : document.DOI);
+
+            command.Parameters.AddWithValue(
+                "@journal_name",
+                string.IsNullOrWhiteSpace(document.JournalName)
+                    ? ""
+                    : document.JournalName);
+
+            command.Parameters.AddWithValue(
+                "@volume",
+                string.IsNullOrWhiteSpace(document.Volume)
+                    ? ""
+                    : document.Volume);
+
+            command.Parameters.AddWithValue(
+                "@issue",
+                string.IsNullOrWhiteSpace(document.Issue)
+                    ? ""
+                    : document.Issue);
+
+            command.Parameters.AddWithValue(
+                "@pages",
+                string.IsNullOrWhiteSpace(document.Pages)
+                    ? ""
+                    : document.Pages);
 
             command.Parameters.AddWithValue(
                 "@publication_date",
@@ -160,6 +208,12 @@ public class DocumentRepository
                 d.id,
                 d.title,
                 d.category,
+                d.document_type,
+                d.doi,
+                d.journal_name,
+                d.volume,
+                d.issue,
+                d.pages,
                 d.publication_date,
                 d.cover_s3_key,
                 d.redmine_issue_id,
@@ -175,6 +229,12 @@ public class DocumentRepository
                 @keyword = ''
                 OR d.title LIKE @pattern
                 OR d.category LIKE @pattern
+                OR d.document_type LIKE @pattern
+                OR d.doi LIKE @pattern
+                OR d.journal_name LIKE @pattern
+                OR d.volume LIKE @pattern
+                OR d.issue LIKE @pattern
+                OR d.pages LIKE @pattern
                 OR EXISTS
                 (
                     SELECT 1
@@ -255,6 +315,12 @@ public class DocumentRepository
                 d.id,
                 d.title,
                 d.category,
+                d.document_type,
+                d.doi,
+                d.journal_name,
+                d.volume,
+                d.issue,
+                d.pages,
                 d.publication_date,
                 d.cover_s3_key,
                 d.redmine_issue_id,
@@ -327,6 +393,12 @@ public class DocumentRepository
                 SET
                     title = @title,
                     category = @category,
+                    document_type = @document_type,
+                    doi = @doi,
+                    journal_name = @journal_name,
+                    volume = @volume,
+                    issue = @issue,
+                    pages = @pages,
                     publication_date = @publication_date,
                     cover_s3_key = @cover_s3_key,
                     redmine_issue_id = @redmine_issue_id,
@@ -357,6 +429,42 @@ public class DocumentRepository
                 string.IsNullOrWhiteSpace(document.Category)
                     ? DBNull.Value
                     : document.Category);
+
+            command.Parameters.AddWithValue(
+                "@document_type",
+                string.IsNullOrWhiteSpace(document.DocumentType)
+                    ? "Book"
+                    : document.DocumentType);
+
+            command.Parameters.AddWithValue(
+                "@doi",
+                string.IsNullOrWhiteSpace(document.DOI)
+                    ? ""
+                    : document.DOI);
+
+            command.Parameters.AddWithValue(
+                "@journal_name",
+                string.IsNullOrWhiteSpace(document.JournalName)
+                    ? ""
+                    : document.JournalName);
+
+            command.Parameters.AddWithValue(
+                "@volume",
+                string.IsNullOrWhiteSpace(document.Volume)
+                    ? ""
+                    : document.Volume);
+
+            command.Parameters.AddWithValue(
+                "@issue",
+                string.IsNullOrWhiteSpace(document.Issue)
+                    ? ""
+                    : document.Issue);
+
+            command.Parameters.AddWithValue(
+                "@pages",
+                string.IsNullOrWhiteSpace(document.Pages)
+                    ? ""
+                    : document.Pages);
 
             command.Parameters.AddWithValue(
                 "@publication_date",
@@ -497,6 +605,42 @@ public class DocumentRepository
                     reader.GetOrdinal("category"))
                     ? ""
                     : reader.GetString("category"),
+
+            DocumentType =
+                reader.IsDBNull(
+                    reader.GetOrdinal("document_type"))
+                    ? "Book"
+                    : reader.GetString("document_type"),
+
+            DOI =
+                reader.IsDBNull(
+                    reader.GetOrdinal("doi"))
+                    ? ""
+                    : reader.GetString("doi"),
+
+            JournalName =
+                reader.IsDBNull(
+                    reader.GetOrdinal("journal_name"))
+                    ? ""
+                    : reader.GetString("journal_name"),
+
+            Volume =
+                reader.IsDBNull(
+                    reader.GetOrdinal("volume"))
+                    ? ""
+                    : reader.GetString("volume"),
+
+            Issue =
+                reader.IsDBNull(
+                    reader.GetOrdinal("issue"))
+                    ? ""
+                    : reader.GetString("issue"),
+
+            Pages =
+                reader.IsDBNull(
+                    reader.GetOrdinal("pages"))
+                    ? ""
+                    : reader.GetString("pages"),
 
             PublicationDate =
                 reader.IsDBNull(

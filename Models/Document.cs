@@ -14,6 +14,18 @@ public class Document
 
     public string Category { get; set; } = "";
 
+    public string DocumentType { get; set; } = "Book";
+
+    public string DOI { get; set; } = "";
+
+    public string JournalName { get; set; } = "";
+
+    public string Volume { get; set; } = "";
+
+    public string Issue { get; set; } = "";
+
+    public string Pages { get; set; } = "";
+
     public List<Tag> Tags { get; set; } = new();
 
     public DateTime? PublicationDate { get; set; }
@@ -41,3 +53,4 @@ public class Document
 
     public DateTime UpdatedAt { get; set; }
 }
+

@@ -5,9 +5,9 @@
         Title="Edit Document"
         FontFamily="Segoe UI"
         Width="900"
-        Height="760"
+        Height="900"
         MinWidth="760"
-        MinHeight="640"
+        MinHeight="700"
         WindowStartupLocation="CenterOwner">
 
     <Window.Styles>
@@ -63,11 +63,32 @@
                 FontWeight="SemiBold"
                 Margin="0,0,0,12"/>
 
+            <!-- Document Type -->
+
+            <TextBlock
+                Classes="label"
+                Text="Document Type"/>
+
+            <ComboBox
+                x:Name="DocumentTypeComboBox"
+                SelectionChanged="DocumentTypeComboBox_SelectionChanged">
+
+                <ComboBoxItem
+                    Content="Book"
+                    Tag="Book"/>
+
+                <ComboBoxItem
+                    Content="Journal"
+                    Tag="Journal"/>
+
+            </ComboBox>
+
             <!-- Title -->
 
             <TextBlock
                 Classes="label"
-                Text="Title"/>
+                Text="Title"
+                Margin="0,7,0,0"/>
 
             <TextBox
                 x:Name="TitleTextBox"/>
@@ -87,6 +108,184 @@
                 MinHeight="80"
                 MaxHeight="120"
                 Watermark="One author per line"/>
+
+            <!-- Journal Search -->
+
+            <Border
+                x:Name="JournalSearchPanel"
+                IsVisible="False"
+                BorderThickness="1"
+                Padding="12"
+                Margin="0,12,0,0">
+
+                <StackPanel
+                    Spacing="6">
+
+                    <TextBlock
+                        Text="Journal Search"
+                        FontSize="13"
+                        FontWeight="SemiBold"/>
+
+                    <TextBlock
+                        Classes="label"
+                        Text="Crossref searches bibliographic metadata."/>
+
+                    <TextBlock
+                        Classes="label"
+                        Text="Title"/>
+
+                    <TextBox
+                        x:Name="CrossrefTitleTextBox"/>
+
+                    <TextBlock
+                        Classes="label"
+                        Text="Author"
+                        Margin="0,4,0,0"/>
+
+                    <TextBox
+                        x:Name="CrossrefAuthorTextBox"/>
+
+                    <StackPanel
+                        Orientation="Horizontal"
+                        Spacing="6"
+                        Margin="0,4,0,0">
+
+                        <Button
+                            x:Name="CrossrefSearchButton"
+                            Content="Crossref Search"
+                            Click="CrossrefSearch_Click"/>
+
+                    </StackPanel>
+
+                    <TextBlock
+                        x:Name="CrossrefStatusText"
+                        FontSize="11"
+                        Opacity="0.65"
+                        IsVisible="False"/>
+
+                    <ListBox
+                        x:Name="CrossrefResultsListBox"
+                        MaxHeight="280"
+                        SelectionChanged="CrossrefResultsListBox_SelectionChanged">
+
+                        <ListBox.ItemTemplate>
+
+                            <DataTemplate
+                                x:DataType="models:CrossrefWork">
+
+                                <Border
+                                    Padding="8"
+                                    Margin="2"
+                                    BorderThickness="1">
+
+                                    <StackPanel
+                                        Spacing="3">
+
+                                        <TextBlock
+                                            Text="{Binding Title}"
+                                            FontWeight="SemiBold"
+                                            TextWrapping="Wrap"/>
+
+                                        <TextBlock
+                                            Text="{Binding AuthorDisplay}"
+                                            TextWrapping="Wrap"
+                                            FontSize="11"/>
+
+                                        <TextBlock
+                                            Text="{Binding JournalName}"
+                                            TextWrapping="Wrap"
+                                            FontSize="11"/>
+
+                                        <TextBlock
+                                            Text="{Binding DisplayPublicationDate}"
+                                            FontSize="11"
+                                            Opacity="0.65"/>
+
+                                        <TextBlock
+                                            Text="{Binding DisplayBibliography}"
+                                            FontSize="11"
+                                            Opacity="0.65"/>
+
+                                        <TextBlock
+                                            Text="{Binding DOI}"
+                                            FontSize="11"
+                                            Opacity="0.65"/>
+
+                                    </StackPanel>
+
+                                </Border>
+
+                            </DataTemplate>
+
+                        </ListBox.ItemTemplate>
+
+                    </ListBox>
+
+                </StackPanel>
+
+            </Border>
+
+            <!-- Journal Metadata -->
+
+            <StackPanel
+                x:Name="JournalMetadataPanel"
+                IsVisible="False"
+                Spacing="6"
+                Margin="0,7,0,0">
+
+                <TextBlock
+                    Classes="label"
+                    Text="Journal Name"/>
+
+                <TextBox
+                    x:Name="JournalNameTextBox"/>
+
+                <Grid
+                    ColumnDefinitions="*,*"
+                    ColumnSpacing="10">
+
+                    <StackPanel
+                        Spacing="6">
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Volume"/>
+
+                        <TextBox
+                            x:Name="VolumeTextBox"/>
+
+                    </StackPanel>
+
+                    <StackPanel
+                        Grid.Column="1"
+                        Spacing="6">
+
+                        <TextBlock
+                            Classes="label"
+                            Text="Issue"/>
+
+                        <TextBox
+                            x:Name="IssueTextBox"/>
+
+                    </StackPanel>
+
+                </Grid>
+
+                <TextBlock
+                    Classes="label"
+                    Text="Pages"/>
+
+                <TextBox
+                    x:Name="PagesTextBox"/>
+
+                <TextBlock
+                    Classes="label"
+                    Text="DOI"/>
+
+                <TextBox
+                    x:Name="DoiTextBox"/>
+
+            </StackPanel>
 
             <!-- Category -->
 
@@ -112,7 +311,7 @@
                 VerticalContentAlignment="Top"
                 MinHeight="50"
                 MaxHeight="80"
-                Watermark="キリスト教, 中世, フランス"/>
+                Watermark="Tags"/>
 
             <!-- Publication Date -->
 
@@ -136,7 +335,7 @@
                 ColumnDefinitions="220,*"
                 ColumnSpacing="14">
 
-                <!-- Current / selected cover -->
+                <!-- Current cover -->
 
                 <Border
                     Width="200"
@@ -152,19 +351,13 @@
 
                 <!-- Cover controls -->
 
-                <Grid
+                <StackPanel
                     Grid.Column="1"
-                    RowDefinitions="Auto,Auto,*"
-                    RowSpacing="8">
+                    Spacing="8">
 
                     <StackPanel
                         Orientation="Horizontal"
                         Spacing="6">
-
-                        <Button
-                            x:Name="SearchCoverButton"
-                            Content="Search Web"
-                            Click="SearchCover_Click"/>
 
                         <Button
                             x:Name="UploadCoverButton"
@@ -174,68 +367,18 @@
                     </StackPanel>
 
                     <TextBlock
-                        Grid.Row="1"
-                        Text="Web Cover Search"
+                        Text="Local Cover"
                         FontSize="13"
                         FontWeight="SemiBold"
                         Margin="0,4,0,0"/>
 
-                    <ListBox
-                        Grid.Row="2"
-                        x:Name="CoverCandidatesListBox"
-                        SelectionChanged="CoverCandidatesListBox_SelectionChanged">
+                    <TextBlock
+                        Text="Open Library cover search has been removed."
+                        FontSize="11"
+                        Opacity="0.65"
+                        TextWrapping="Wrap"/>
 
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel
-                                    Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-
-                        <ListBox.ItemTemplate>
-
-                            <DataTemplate
-                                x:DataType="models:BookCoverCandidate">
-
-                                <Border
-                                    Width="110"
-                                    Height="190"
-                                    Margin="3"
-                                    Padding="4"
-                                    BorderThickness="1">
-
-                                    <Grid
-                                        RowDefinitions="135,Auto,Auto"
-                                        RowSpacing="3">
-
-                                        <Image
-                                            Source="{Binding CoverUrl}"
-                                            Stretch="Uniform"/>
-
-                                        <TextBlock
-                                            Grid.Row="1"
-                                            Text="{Binding Title}"
-                                            TextWrapping="Wrap"
-                                            MaxLines="2"
-                                            FontSize="10"/>
-
-                                        <TextBlock
-                                            Grid.Row="2"
-                                            Text="{Binding DisplayYear}"
-                                            Opacity="0.55"
-                                            FontSize="10"/>
-
-                                    </Grid>
-
-                                </Border>
-
-                            </DataTemplate>
-
-                        </ListBox.ItemTemplate>
-
-                    </ListBox>
-
-                </Grid>
+                </StackPanel>
 
             </Grid>
 
